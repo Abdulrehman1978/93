@@ -60,10 +60,12 @@ class BaseSupportAdapter(ABC):
 - **Endpoint:** `POST /api/v1/integrations/nalsa/docket-referral`
 - **Features:** Packages statutory victim rights notification under Section 15A of PoA Act; transmits to DLSA front-office portal.
 
-### 3. `ERSS112Adapter` (Emergency Response Support System)
+### 3. `ERSS112Adapter` (Emergency Response Support System / Police Protection)
 - **Status:** `SANDBOX`.
 - **Endpoint:** `POST /api/v1/integrations/erss112/dispatch`
-- **Safety Gate:** Requires explicit human operator authorization; triggers dispatch confirmation payload with simulated vehicle dispatch telemetry.
+- **Mandatory Human-Authorized Handoff Boundary:** An AI score, threshold breach, or safety model event may recommend escalation, but **may NOT autonomously contact law enforcement or emergency services** unless a future formally approved government statutory policy explicitly authorizes such behavior.
+- **Workflow:** The system surfaces a high-priority alert on the Operator Live Copilot. Transmission to `ERSS112Adapter` strictly requires the 14566 helpline operator to verbally verify immediate danger and explicitly click `[AUTHORIZE EMERGENCY ESCALATION]`.
+- **Telemetry:** In sandbox mode, triggers simulated dispatch confirmation with simulated vehicle dispatch telemetry and auditable operator sign-off.
 
 ### 4. `SAMBALCaseAdapter` (MoSJE Core Docket Synchronization)
 - **Status:** `ADAPTER_READY`.

@@ -74,7 +74,7 @@ The linguistic diversity of complainants contacting 14566 across Indian states r
 Rather than collapsing all signals into a single score, the system must independently maintain:
 1. **Immediate Safety Gate:** Evaluates active physical threat, active violence, or imminent self-harm.
 2. **Stress Vulnerability Index (SVI):** Evaluates psychological, contextual, and structural vulnerability.
-3. **Incident Urgency:** Evaluates statutory severity, legal deadlines, and protection needs regardless of caller emotional expression.
+3. **Reported Incident Urgency:** Evaluates reported facts potentially relevant to urgency, statutory protection categories, and time-sensitive legal deadlines regardless of caller emotional expression. The system does NOT determine whether a crime legally occurred or whether an accused is guilty; legal characterization remains an authorized human/government responsibility.
 
 ### Dimension 8: Evidence Transparency & Counterfactual Reasoning (USP 2)
 - Operators, supervisors, and judges must be able to inspect every piece of evidence (timestamp, modality, model version, confidence, SVI contribution).
@@ -108,10 +108,10 @@ The system does not terminate at a triage recommendation. It drives and tracks:
 
 ---
 
-## 4. Operational Gaps in Existing Ecosystem
+## 4. Operational Context & Capabilities Documented in Public Sources
 
-Through our empirical audit of current government releases and grievance operations:
-1. **NHAA 14566 operates primarily as a manual call-intake and CRM docket system.** Operators log complainant details into a web form, register an atrocity docket, and forward it to District Magistrates or Police Superintendents.
-2. **Zero Automated Psychological Vulnerability Triage:** Operators receive no real-time guidance on acute trauma, dissociation, or suicidal ideation during the call.
-3. **No Closed-Loop Mental Health Integration:** Referrals to Tele-MANAS or legal aid are handled ad-hoc via external telephone numbers with zero status handoff or verified outcome tracking.
-4. **The SAMBAL Intelligence Layer fills this exact gap:** Acting as an intelligence and response layer running alongside NHAA and portal sessions, surfacing immediate threats, guiding the operator with trauma-informed prompts, and orchestrating closed-loop service delivery.
+Public official materials reviewed document grievance registration, docket tracking, escalation/reminder and citizen feedback capabilities within the NHAA (14566) and SAMBAL portals. However, published materials do not document the real-time multimodal vulnerability assessment, trauma-aware co-pilot guidance, and closed-loop cross-service support orchestration required by SIH26093:
+1. **Intake Capabilities:** Public portals provide structured grievance logging and docket generation, but lack real-time acoustic/prosodic or semantic distress analysis during active calls.
+2. **Dissociated / Calm Complainant Handling:** Guidance tools are needed to prevent cases where calm callers reporting extreme ongoing violence are inadvertently assigned low priority.
+3. **Cross-Agency Handoff Telemetry:** While administrative dockets are redirected to District Magistrates or Police Superintendents, automated closed-loop integration with mental health (Tele-MANAS 14416) or legal aid (NALSA) is not documented.
+4. **SAMBAL Intelligence Layer Role:** Acts as an augmentative intelligence and response layer running alongside NHAA and portal sessions, surfacing immediate threats, guiding the operator with trauma-informed prompts, and orchestrating closed-loop service delivery.

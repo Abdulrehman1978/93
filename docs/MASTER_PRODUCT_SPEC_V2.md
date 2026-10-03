@@ -34,7 +34,7 @@ REFER (Consented Safe Handoff to Tele-MANAS, DLSA, ERSS)
       ↓
 TRACK (Closed-Loop Referral State Machine & SLA Timers)
       ↓
-FOLLOW UP (Automated 7-Day & 14-Day Status Verification)
+FOLLOW UP (Policy-Driven `FollowUpPolicy` Cadence)
       ↓
 MEASURE OUTCOME (District Resource Gaps & Welfare Intelligence)
 ```
@@ -46,9 +46,9 @@ MEASURE OUTCOME (District Resource Gaps & Welfare Intelligence)
 ### USP 1 — Three-Dimensional Risk Understanding
 Rather than collapsing complex trauma and legal danger into a single arbitrary score, the system maintains three orthogonal dimensions:
 1. **Immediate Safety Gate:** Evaluates imminent physical peril, active violence, or explicit self-harm intent. Triggers fast-path emergency workflows.
-2. **Stress Vulnerability Index (SVI: 0–100):** Evaluates psychological, emotional, and structural vulnerability across Low, Moderate, High, and Critical bands.
-3. **Incident Urgency:** Evaluates statutory PoA Act offence severity, legal deadlines, and protection needs.
-- **The Golden Rule Solved:** A complainant speaking in a calm, flat, dissociated monotone about an armed mob is correctly assigned **CRITICAL URGENCY** and **CRITICAL SAFETY**, completely overriding the low acoustic arousal.
+2. **Stress Vulnerability Index (SVI: 0–100):** Evaluates psychological, emotional, and structural vulnerability across Low, Moderate, High, and Critical bands. Operates under `SVI_POLICY_STATUS = PROVISIONAL_TRIAGE_POLICY` pending Packet 11 calibration.
+3. **Reported Incident Urgency:** Identifies facts potentially relevant to urgency, statutory protection categories, and time-sensitive legal deadlines regardless of caller emotional expression. The system does NOT determine whether a crime legally occurred, whether an offence is proven, or whether a person is guilty. Legal characterization remains an authorized human/government responsibility.
+- **The Golden Rule Solved:** A complainant speaking in a calm, flat, dissociated monotone about an ongoing violent assault is correctly assigned **CRITICAL URGENCY** and **CRITICAL SAFETY**, completely overriding the low acoustic arousal.
 
 ### USP 2 — Evidence Instead of Mysterious AI
 No operator, supervisor, or judge is ever forced to accept an opaque "Trauma Score = 87". Every output is fully explainable in the **Evidence Inspector**:
@@ -68,11 +68,12 @@ The platform answers the fundamental question of public service: **"Did the vict
 
 ## 3. Non-Negotiable Ethical & Diagnostic Boundaries
 
-1. **Decision Support, NOT Diagnosis:** The system provides structured triage assistance; it does NOT output psychiatric or medical diagnoses (no "PTSD detected" or "Severe Depression diagnosed").
+1. **Decision Support, NOT Diagnosis:** The system provides trauma-informed, safety-informed triage assistance; it does NOT output psychiatric or medical diagnoses (no "PTSD detected" or "Severe Depression diagnosed"). All thresholds represent a *provisional triage policy* requiring domain/clinical validation before production certification.
 2. **Strict Ban on Truth / Lie Detection:** The system never evaluates "credibility", "truth probability", or "fake victim scores". Voice stress analysis is scientifically discredited for truth detection.
 3. **Zero Demographic Profiling:** The system never infers caste, religion, sexual orientation, or character from voice acoustics.
-4. **Mandatory Human-in-the-Loop:** High-impact interventions (police dispatch, court notifications) strictly require human operator authorization.
-5. **Ephemeral Raw Audio:** Raw voice streams are discarded after feature extraction unless explicit complainant consent is granted for evidence archiving.
+4. **Mandatory Human-Authorized Handoff Boundary:** An AI score or model event may recommend escalation but **may NOT autonomously contact law enforcement or emergency services** (`ERSS112Adapter`) unless a future formally approved policy explicitly authorizes such behavior. High-impact interventions strictly require human operator authorization.
+5. **No Autonomous Crime / Guilt Determination:** The system identifies facts potentially relevant to urgency or statutory routing. It does NOT determine that a crime legally occurred or that a person is guilty.
+6. **Ephemeral Raw Audio:** Raw voice streams are discarded after feature extraction unless explicit complainant consent is granted for evidence archiving.
 
 ---
 
@@ -115,10 +116,25 @@ The platform answers the fundamental question of public service: **"Did the vict
 
 ---
 
-## 5. Technology Stack Summary
+## 5. Technology Stack Summary (V3 Lean-Core Architecture)
+
+```text
+Next.js PWA
+      ↓
+FastAPI Modular Monolith
+      ↓
+PostgreSQL 16+ (Canonical)
+      ↓
+S3-Compatible Object Storage
+      ↓
+PostgreSQL-Backed Async Job Queue
+      ↓
+External / Government Provider Adapters
+```
+
 - **Frontend Surfaces:** Next.js 14/15 (App Router), React, Tailwind CSS (Civic Calm Design System), Web Audio API, Canvas Waveform.
 - **Backend Core:** FastAPI Modular Monolith (Python 3.12+), Uvicorn, Pydantic v2, SQLAlchemy v2.
-- **Speech & DSP:** CTranslate2 `faster-whisper-turbo` (INT8 quantized), `librosa` (pyin F0, RMS, spectral flux), `webrtcvad`.
-- **Database:** PostgreSQL 16+ (Normalized domain schema within 45-table budget; SQLite supported for local demo zero-config mode).
+- **Speech & DSP:** `faster-whisper-turbo` (CTranslate2 INT8 quantized) as **`BASELINE_CANDIDATE`** for local execution; final selection subject to Packet 08 benchmarking against Indic alternatives. Native DSP via `librosa` (pyin F0, RMS, spectral flux) and `webrtcvad`.
+- **Database:** **PostgreSQL 16+ is canonical** across dev, testing, E2E, CI, staging, and production. Table budget is approximately **32–40 core relational tables** ($\le 45$ upper budget limit). SQLite is restricted solely to deliberately DB-agnostic unit tests.
 - **Security & Privacy:** DPDP-ready consent engine, AES-256 field encryption, purpose-scoped RBAC, SHA-256 webhook signatures.
 - **Packaging:** Multi-stage Docker & Docker Compose; zero-dependency offline local bootstrap.

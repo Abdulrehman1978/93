@@ -49,11 +49,13 @@ The current operational lifecycle of a grievance or atrocity complaint follows a
 [ Periodic Manual Review & Police Investigation (Target: 60 Days) ]
 ```
 
-### Empirical Deficits in the Current Workflow
-1. **Unstructured Emotional Triage:** Helpline operators are primarily trained as call-centre customer service representatives or clerical data-entry staff. They are not clinical trauma specialists. When a caller experiences acute panic, dissociation, or suicidal ideation, operators have no real-time decision-support tools.
-2. **Failure to Detect Covert Intimidation:** A caller forced to speak in the presence of an oppressor, or speaking in a calm, flat, dissociated voice about imminent murder threats, is often assigned low administrative priority because they did not "sound hysterical."
-3. **Siloed Helplines & Broken Handoffs:** If a victim requires urgent psychiatric intervention, the operator can at best recite the number for Tele-MANAS (`14416`). The victim is left to dial another number, face another IVR, and recount their horrific experience from scratch.
-4. **No Closed-Loop Verification:** The helpline software marks a case as "Referred to Legal Aid" as soon as a docket is forwarded. It possesses zero telemetry to answer: *Did the victim meet a lawyer? Did they receive witness protection? Did mental health support actually commence?*
+### Operational Context & Capabilities Documented in Public Sources
+
+Public official materials reviewed document grievance registration, docket tracking, escalation/reminder and citizen feedback capabilities within the NHAA (14566) and SAMBAL portals. However, published materials do not document the real-time multimodal vulnerability assessment, trauma-aware co-pilot guidance, and closed-loop cross-service support orchestration required by SIH26093:
+1. **Real-Time Vulnerability Triage:** Public documentation describes structured intake forms for grievance recording, but does not document automated real-time acoustic or textual stress assessment during incoming calls.
+2. **Detection of Subtle / Dissociated Distress:** Callers speaking in a calm, flat, or dissociated tone about severe ongoing threats require systematic prioritization tools to ensure urgent situations are surfaced immediately.
+3. **Cross-Service Handoff Continuity:** Public workflows document referral routing to administrative officers (DM/SP), but do not detail automated closed-loop handoffs with specialized mental health helplines (Tele-MANAS 14416) or legal services (NALSA/DLSA).
+4. **Verified Support Telemetry:** Standard grievance systems log administrative forwarding; SIH26093 introduces the capability to verify whether referred support was actually received by the victim.
 
 ---
 
@@ -90,7 +92,7 @@ Instead, **SAMBAL Intelligence & Response Layer** is architected as a **Headless
              [ NHAA Operator Co-Pilot ]       [ Three-Dimensional Triage ]
              • Live Transcript & Markers      • Immediate Safety Gate
              • Evidence Inspector             • SVI Risk Band (Low-Crit)
-             • Suggested Trauma Questions     • Statutory Incident Urgency
+             • Suggested Trauma Questions     • Reported Incident Urgency
              • Human Oversight & Override                  │
                          │                                 │
                          └────────────────┬────────────────┘
@@ -127,4 +129,4 @@ To maintain absolute architectural credibility, our platform implements canonica
 - **`SAMBALCaseAdapter`:** Ingests external docket IDs; synchronizes complaint status, FIR details, and district assignment.
 - **`TeleManasAdapter`:** Packages consented psychiatric referral packages (safe handoff) and receives bi-directional consultation acknowledgements.
 - **`LegalAidAdapter`:** Transmits statutory legal-aid eligibility notices under PoA Act Section 15A (Rights of Victims and Witnesses).
-- **`ERSS112Adapter`:** High-priority dispatch trigger when Immediate Safety Gate detects active life-threatening violence.
+- **`ERSS112Adapter`:** High-priority dispatch trigger when Immediate Safety Gate detects active life-threatening violence; strictly requires human operator verification and authorization.

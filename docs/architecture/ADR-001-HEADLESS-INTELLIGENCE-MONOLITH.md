@@ -20,12 +20,27 @@ Teams often gravitate toward distributed microservices (deploying separate servi
 
 ## 2. Decision
 
-We choose a **Headless Modular Monolith** built on **FastAPI (Python 3.12+)** and **Next.js (App Router)**:
+We choose a **Headless Modular Monolith** built on **FastAPI (Python 3.12+)** and **Next.js (App Router)** adhering strictly to the **V3 Lean-Core Architecture**:
 
-1. **In-Process Speech AI & DSP:** The speech-to-text engine (`faster-whisper-turbo` via CTranslate2 INT8) and acoustic feature extractors (`librosa`, WebRTC VAD) execute directly in-process within the backend application worker pool, reading from shared memory ring buffers with zero inter-process network overhead.
-2. **Headless Module-First Design:** All intelligence, safety, scoring, and orchestration logic is exposed via clean, versioned REST (`/api/v1/*`) and WebSocket (`/ws/v1/*`) contracts. The Next.js frontend is a reference consumer; any external portal (14566 telephony, SAMBAL portal, mobile app) can integrate directly via headless APIs.
-3. **Database Budget:** Single relational PostgreSQL 16 instance with $\le 45$ normalized domain tables.
-4. **Lean Background Tasks:** Async background tasks and referral webhook retries are managed via native asyncio worker queues backed by database transactional locking, eliminating external Redis/Celery dependencies for the default deployment.
+```text
+Next.js PWA
+      ↓
+FastAPI Modular Monolith
+      ↓
+PostgreSQL 16+ (Canonical)
+      ↓
+S3-Compatible Object Storage
+      ↓
+PostgreSQL-Backed Async Job Queue
+      ↓
+External / Government Provider Adapters
+```
+
+1. **In-Process Speech AI & DSP:** The speech-to-text engine (`faster-whisper-turbo` via CTranslate2 INT8) is deployed as a **`BASELINE_CANDIDATE`** for initial local implementation. It executes directly in-process within the backend application worker pool, reading from shared memory ring buffers. Final selection requires Packet 08 benchmarking against Indic-focused/government alternatives.
+2. **Canonical PostgreSQL Database:** PostgreSQL 16+ is the **authoritative and canonical database** across development integration, migrations, database testing, E2E, CI, staging, and production. SQLite is prohibited as a production-compatible alternative and is restricted solely to deliberately database-agnostic isolated unit tests. No migration, constraint, or release claim may be validated using SQLite.
+3. **Database Budget:** Target approximately **32–40 core relational tables**. The $\le 45$ table limit is a strict upper design budget; exceeding 45 requires a formal ADR.
+4. **Lean Background Tasks:** Async background tasks and referral webhook retries are managed via native asyncio worker queues backed by PostgreSQL transactional state (e.g. `SKIP LOCKED`), completely eliminating Redis, Celery, RabbitMQ, or Kafka dependencies.
+5. **No Speculative Infrastructure:** Zero Redis, Kafka, RabbitMQ, Celery, Kubernetes, service mesh, Elasticsearch, or separate ML microservices without measured bottleneck, ADR, and operational justification. Real-time transport is standardized on WebSocket and/or SSE.
 
 ---
 

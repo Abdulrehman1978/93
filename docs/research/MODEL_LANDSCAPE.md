@@ -13,14 +13,27 @@ Crisis intake over **14566** involves 8kHz narrowband PSTN telephone audio or va
 
 | Model Candidate | Developer / Provider | Architecture | Indian Language Coverage | Code-Switching Quality | 8kHz Telephone Audio Robustness | Latency Profile | Offline / Edge Feasibility | License | Assessment & Deployment Tier |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **faster-whisper** (`large-v3` / `turbo`) | SYSTRAN / OpenAI | CTranslate2-optimized Transformer Encoder-Decoder | Strong across major Indian languages (hi, mr, bn, ta, te, kn, gu, pa, ur, en). | Moderate-to-High; handles natural Hinglish well; may occasionally normalize loanwords. | Moderate; requires audio resampling and high-pass filtering to mitigate low-band loss. | **Fast** (2.5x faster than vanilla Whisper; ~1.1s on 4-core CPU for 5s chunk with `turbo`). | Excellent; self-contained binary, zero external network dependency. | MIT | **PRIMARY LOCAL DEFAULT (LIVE)** |
-| **AI4Bharat IndicConformer** | AI4Bharat / IIT Madras | Conformer ASR trained on 10,000+ hours of Indic speech | Exceptional across 22 scheduled Indian languages. | **Best-in-class** for authentic Indian accents and dialectal variations. | High; trained on diverse real-world Indian acoustic environments. | Moderate on CPU; optimal on CUDA/TensorRT (~400ms per utterance on T4). | Feasible with ONNX / PyTorch deployment; requires ~2GB model weights. | MIT | **RECOMMENDED INDIC ENGINE (ADAPTER_READY / LIVE)** |
-| **BHASHINI ASR Gateway** | Digital India Bhashini Division (MeitY) | Multi-model national language pipeline | Full 22 official Indian languages. | Very High for regional colloquial speech. | High; tuned on national public service datasets. | Dependent on government network gateway latency (~800ms - 2.5s network roundtrip). | Cloud-only; requires MeitY API key and authorization. | Government API Terms | **OFFICIAL GOV INTEGRATION (ADAPTER_READY)** |
+| **faster-whisper** (`large-v3` / `turbo`) | SYSTRAN / OpenAI | CTranslate2-optimized Transformer Encoder-Decoder | Strong across major Indian languages (hi, mr, bn, ta, te, kn, gu, pa, ur, en). | Moderate-to-High; handles natural Hinglish well; may occasionally normalize loanwords. | Moderate; requires audio resampling and high-pass filtering to mitigate low-band loss. | Measured in dev (~1.1s on 4-core CPU for 5s chunk with `turbo`). Latency varies with SNR. | Excellent; self-contained binary, zero external network dependency. | MIT | **BASELINE_CANDIDATE (Initial Local Implementation)** |
+| **AI4Bharat IndicConformer** | AI4Bharat / IIT Madras | Conformer ASR trained on 10,000+ hours of Indic speech | Exceptional across 22 scheduled Indian languages. | **Best-in-class** for authentic Indian accents and dialectal variations. | High; trained on diverse real-world Indian acoustic environments. | Moderate on CPU; optimal on CUDA/TensorRT (~400ms per utterance on T4). | Feasible with ONNX / PyTorch deployment; requires ~2GB model weights. | MIT | **EVALUATION CANDIDATE (Packet 08 Benchmark)** |
+| **BHASHINI ASR Gateway** | Digital India Bhashini Division (MeitY) | Multi-model national language pipeline | Full 22 official Indian languages. | Very High for regional colloquial speech. | High; tuned on national public service datasets. | Dependent on government network gateway latency (~800ms - 2.5s network roundtrip). | Cloud-only; requires MeitY API key and authorization. | Government API Terms | **OFFICIAL GOV CANDIDATE (ADAPTER_READY)** |
 | **OpenAI Whisper API / Commercial Cloud** | OpenAI / Azure / Google Cloud STT | Proprietary cloud endpoints | Broad multilingual coverage. | High. | High with automatic audio pre-filtering. | 1.0s - 2.0s network latency; recurring token and per-minute costs ($0.006/min). | None; violates air-gapped or localized public-sector data residency requirements. | Commercial SaaS | **SANDBOX / BACKUP ONLY** |
 
-### Selected ASR Strategy
-- **Runtime Default:** `faster-whisper-turbo` (CTranslate2 INT8 quantization) running locally in the backend worker container. Provides deterministic, offline, zero-cloud-leakage transcription with < 1.2s latency.
-- **Provider Abstraction:** Implemented via `SpeechToTextProvider` protocol, allowing seamless runtime toggling to Bhashini or AI4Bharat IndicConformer without altering downstream intelligence logic.
+### Selected ASR Strategy & Benchmark Mandate
+- **Baseline Candidate:** `faster-whisper-turbo` (CTranslate2 INT8 quantization) running locally in the backend worker container. It serves as the initial local development baseline. It is **NOT** a finalized production selection, and sub-second streaming latency is an aspirational design target subject to real hardware validation.
+- **Provider Abstraction:** Implemented strictly via the `ASRProvider` protocol interface. Domain and safety logic must never directly couple to CTranslate2 or any specific speech vendor.
+- **Packet 08 Benchmarking Mandate:** Final production ASR selection will be decided during Packet 08 by benchmarking the baseline candidate against at least one viable Indic-focused or government alternative (AI4Bharat IndicConformer / Bhashini) on:
+  1. Word Error Rate (WER) across Hindi, Indian English, Marathi, Bengali, Tamil, Telugu
+  2. Critical safety phrase recall (threats, self-harm keywords, weapon mentions)
+  3. Code-switching performance (Hinglish, Marathlish)
+  4. Telephone-quality audio degradation (8kHz downsampled audio)
+  5. Background noise resilience (street, vehicle, and household noise)
+  6. CPU vs. GPU latency profiles
+  7. Time-to-first-partial and Time-to-stable-segment
+  8. End-to-end safety-alert latency
+  9. Memory footprint and peak RAM
+  10. Operating cost and licensing compatibility
+  11. Offline and air-gapped viability
+All latency and throughput claims must be backed by measured hardware/environment evidence.
 
 ---
 

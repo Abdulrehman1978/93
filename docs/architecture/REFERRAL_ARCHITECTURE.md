@@ -45,8 +45,10 @@
 └── Status updated in citizen PWA Case Tracker (non-stigmatizing progress bar)
        │
        ▼
-[ FOLLOW-UP CADENCE (7-Day & 14-Day Automated Triggers) ]
-├── Automated follow-up task queued for 14566 welfare operator
+[ POLICY-DRIVEN FOLLOW-UP CADENCE (`FollowUpPolicy`) ]
+├── Follow-up task queued based on active versioned policy (e.g. service_type, priority, risk band)
+├── FollowUpPolicy model: { interval, trigger, priority, service_type, policy_version, effective_from, source }
+├── Illustrative demo defaults: Critical = 48h, High = 7 days, Moderate = 14 days (configurable demo policy)
 ├── Operator verifies: "Did you receive the assistance? Do you feel safer now?"
 └── Complainant confirms support experience and current safety state
        │
