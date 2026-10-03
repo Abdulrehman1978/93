@@ -10,30 +10,26 @@ describe("HomePage Smoke Test", () => {
     expect(heading).toBeDefined();
     expect(heading).not.toBeNull();
     expect(heading.textContent).toContain(
-      "SAMBAL Intelligence & Response Layer — Architecture & Foundation Status",
+      "A clear, humane grammar for future public-service workflows",
     );
   });
 
   it("renders capability states with truthful badges", () => {
     render(React.createElement(HomePage));
-    expect(screen.getByText("Monorepo Toolchain & App Shells")).toBeDefined();
-    expect(screen.getByText("Canonical PostgreSQL Engine")).toBeDefined();
-    expect(screen.getByText("Speech-to-Text Pipeline (ASR)")).toBeDefined();
-    expect(
-      screen.getByText("Stress & Vulnerability Index (SVI)"),
-    ).toBeDefined();
+    expect(screen.getByText("Design system")).toBeDefined();
+    expect(screen.getByText("Accessibility automated baseline")).toBeDefined();
+    expect(screen.getByText("Citizen intake")).toBeDefined();
+    expect(screen.getByText("AI assessment")).toBeDefined();
   });
 
   it("renders engineering notes and capability status indicators", () => {
     render(React.createElement(HomePage));
     expect(
-      screen.getByText(
-        /Clean-CI verified across unit, E2E, and Axe a11y test suites/i,
-      ),
+      screen.getByText(/Civic Calm tokens and reusable primitives are ready/i),
     ).toBeDefined();
     expect(
       screen.getByText(
-        /Requires Packet 08 benchmarking against IndicConformer\/Bhashini/i,
+        /No live scoring, diagnosis, or model inference exists/i,
       ),
     ).toBeDefined();
   });

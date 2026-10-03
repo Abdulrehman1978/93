@@ -7,9 +7,7 @@ test.describe("SAMBAL Web Shell Smoke Tests", () => {
     await page.goto("/");
 
     // Check title
-    await expect(page).toHaveTitle(
-      /SAMBAL — Multilingual Trauma-Aware Intelligence & Response Layer/,
-    );
+    await expect(page).toHaveTitle(/SAMBAL — Civic service prototype/);
 
     // Verify exactly one h1 is present
     const h1Count = await page.locator("h1").count();
@@ -17,11 +15,13 @@ test.describe("SAMBAL Web Shell Smoke Tests", () => {
 
     // Verify main heading content
     const h1 = page.locator("h1");
-    await expect(h1).toContainText("SAMBAL Intelligence & Response Layer");
+    await expect(h1).toContainText(
+      "A clear, humane grammar for future public-service workflows",
+    );
 
     // Verify header branding
-    await expect(page.locator("header")).toContainText(
-      "National Helpline Against Atrocities (14566)",
+    await expect(page.locator(".site-header")).toContainText(
+      "SIH integration prototype",
     );
 
     // Verify health button exists and is clickable

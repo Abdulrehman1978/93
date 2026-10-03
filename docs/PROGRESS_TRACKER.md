@@ -18,9 +18,9 @@
 | **PKT-02** | Product, Safety & Service Specification | **PASS** (via 02R) | Phase 1 — Platform Core | Principal Product Manager / Safety Advisor | [`docs/results/02-result.md`](./results/02-result.md) |
 | **PKT-02R** | **Pre-Database Product, Privacy & Domain Contract Remediation** | **PASS** | Phase 1 — Platform Core | Principal Product Manager / Safety Advisor | [`docs/results/02R-result.md`](./results/02R-result.md) |
 | **PKT-03** | Database Foundation & Domain Schema | **OWNER APPROVED — PASS via 03R** | Phase 1 — Platform Core | Data Architect / Backend Lead | [`docs/results/03R-result.md`](./results/03R-result.md) |
-| **PKT-04** | Authorization, RBAC & Privacy Foundation | **PARTIAL** (remediated by 04R) | Phase 1 — Platform Core | Security Architect / Privacy Engineer | [`docs/results/04-result.md`](./results/04-result.md) |
-| **PKT-04R** | **Authorization Trust-Boundary, Encryption & Break-Glass Remediation** | **IN_PROGRESS — OWNER REVIEW** | Phase 1 — Platform Core | Security Architect / Privacy Engineer | [`docs/results/04R-result.md`](./results/04R-result.md) |
-| **PKT-05** | Civic Calm Design System & Primitives | NOT_STARTED | Phase 1 — Platform Core | Principal UX Designer / A11y Lead | `docs/results/05-result.md` |
+| **PKT-04** | Authorization, RBAC & Privacy Foundation | **OWNER APPROVED — PASS via 04R** | Phase 1 — Platform Core | Security Architect / Privacy Engineer | [`docs/results/04-result.md`](./results/04-result.md) |
+| **PKT-04R** | **Authorization Trust-Boundary, Encryption & Break-Glass Remediation** | **OWNER APPROVED — PASS** | Phase 1 — Platform Core | Security Architect / Privacy Engineer | [`docs/results/04R-result.md`](./results/04R-result.md) |
+| **PKT-05** | Civic Calm Design System & Primitives | **OWNER_REVIEW** | Phase 1 — Platform Core | Principal UX Designer / A11y Lead | [`docs/results/05-result.md`](./results/05-result.md) |
 | **PKT-06** | Channel Gateway & Consent Engine | NOT_STARTED | Phase 2 — Ingestion & Safety | Real-Time Systems / API Architect | `docs/results/06-result.md` |
 | **PKT-07** | Citizen Intake (Speak / Write / Silent) | NOT_STARTED | Phase 2 — Ingestion & Safety | Staff Frontend / Trauma UX Specialist | `docs/results/07-result.md` |
 | **PKT-08** | Multilingual Speech Pipeline & ASR | NOT_STARTED | Phase 2 — Ingestion & Safety | Speech AI Engineer / Applied ML | `docs/results/08-result.md` |
