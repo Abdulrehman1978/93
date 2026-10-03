@@ -160,9 +160,7 @@ def upgrade() -> None:
     op.execute(
         sa.text("UPDATE consent_events SET channel = 'WEB' WHERE channel IN ('VOICE','TEXT')")
     )
-    _drop_constraint(
-        "consent_events", "ck_consent_events_ck_consent_events_consent_events_channel"
-    )
+    _drop_constraint("consent_events", "ck_consent_events_ck_consent_events_consent_events_channel")
     op.create_check_constraint(
         "consent_events_channel",
         "consent_events",
