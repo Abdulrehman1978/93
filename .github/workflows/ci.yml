@@ -58,12 +58,14 @@ jobs:
           cd backend
           uv run mypy app
 
-      - name: Apply fresh PostgreSQL migrations
+      - name: Replay PostgreSQL migrations from base
         env:
           DATABASE_URL: postgresql+asyncpg://sambal_user:sambal_secure_pass@localhost:5432/sambal_db
           ENVIRONMENT: testing
         run: |
           cd backend
+          uv run alembic upgrade head
+          uv run alembic downgrade base
           uv run alembic upgrade head
 
       - name: Verify Alembic schema drift is zero

@@ -2,6 +2,8 @@
 
 The diagrams are split by domain so the safety-critical relationships remain readable. All identifiers are UUIDs unless a field is explicitly a safe external/reference string.
 
+Referral lifecycle state is stored independently from case closure and support outcome evidence. `referrals.status` and `referral_events.previous_status/new_status` share the 15-state vocabulary; `support_outcomes.outcome_stage` has its separate seven-stage vocabulary. Transition legality remains application-domain logic.
+
 ## Governance and case source
 
 ```mermaid

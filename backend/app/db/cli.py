@@ -100,7 +100,7 @@ async def _seed_reference_data() -> None:
                     ProcessingAuthorityType(
                         authority_code=code,
                         display_name=name,
-                        source_class=source_class,
+                        authority_source_class=source_class,
                         legal_reference=legal_reference,
                         effective_from=now,
                     )

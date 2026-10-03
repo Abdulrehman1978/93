@@ -4,7 +4,7 @@ Status: Accepted for Packet 03 implementation, pending owner review.
 
 ## Decision
 
-Use PostgreSQL 16.15+ as the sole canonical relational database. SQLAlchemy 2.x async with asyncpg owns runtime access; Alembic owns reproducible schema changes. Packet 03 contains 36 core tables, below the 45-table ceiling, grouped into six readable migrations.
+Use PostgreSQL 16.15+ as the sole canonical relational database. SQLAlchemy 2.x async with asyncpg owns runtime access; Alembic owns reproducible schema changes. Packet 03 contains 36 core tables, below the 45-table ceiling, grouped into six readable migrations. Each revision is an immutable, self-contained snapshot expressed with explicit Alembic operations; revisions never import current ORM models or `Base.metadata`.
 
 The schema is normalized around the approved domain distinctions:
 
@@ -12,12 +12,12 @@ The schema is normalized around the approved domain distinctions:
 - `consent_events` are append-only consent choices; `processing_authorizations` are the broader lawful-authority ledger.
 - transcript segments remain the source material; evidence stores pointers and provenance.
 - immediate safety, SVI, and reported incident urgency are independent result tables.
-- referral state, support outcomes, service freshness, service availability, service capacity, and integration status are independent.
+- referral state (15 controlled states), support outcome stage/evidence, service freshness, service availability, service capacity, and integration status are independent.
 - domain histories and audit events are separate append-oriented records.
 
 ## Modeling choices
 
-Stable product statuses use `TEXT/VARCHAR` plus named check constraints, allowing controlled evolution without irreversible PostgreSQL ENUM types. Lawful authorities are a catalog with effective dates and source classes. JSONB is limited to variable external metadata/provenance; core domain fields are typed columns.
+Stable product statuses use `TEXT/VARCHAR` plus named check constraints, allowing controlled evolution without irreversible PostgreSQL ENUM types. Lawful authorities are a catalog with effective dates and the independent `authority_source_class` vocabulary `STATUTORY`, `REGULATORY`, `CONSTITUTIONAL`, `EXECUTIVE_POLICY`, and `PRODUCT_POLICY`. Safe callback windows use PostgreSQL `TIME` local wall-clock values. JSONB is limited to variable external metadata/provenance; core domain fields are typed columns.
 
 PII is minimized and separated: `subjects` is deliberately small, `subject_contacts` owns contact channels, and transcript/evidence/referral fields do not duplicate names, phones, addresses, identity numbers, caste, or inferred attributes. Packet 04 must add encryption/key management, RBAC, purpose-scoped authorization, and RLS as appropriate; Packet 03 does not claim those controls.
 

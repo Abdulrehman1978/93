@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import AsyncIterator
+from pathlib import Path
 
 import pytest
 from sqlalchemy import text
@@ -12,6 +13,34 @@ from sqlalchemy.ext.asyncio import AsyncConnection
 from app.database import engine
 
 pytestmark = pytest.mark.integration
+
+REFERRAL_STATES = (
+    "RECOMMENDED",
+    "REVIEW_REQUIRED",
+    "APPROVED",
+    "DECLINED",
+    "REFERRED",
+    "ACKNOWLEDGED",
+    "CONTACT_PENDING",
+    "CONTACTED",
+    "APPOINTMENT_SCHEDULED",
+    "SERVICE_STARTED",
+    "FOLLOW_UP_DUE",
+    "COMPLETED",
+    "UNABLE_TO_CONTACT",
+    "ESCALATED",
+    "CANCELLED",
+)
+
+SUPPORT_OUTCOME_STAGES = (
+    "RECOMMENDED",
+    "REFERRED",
+    "ACKNOWLEDGED",
+    "CONTACTED",
+    "SERVICE_STARTED",
+    "FOLLOW_UP_CONFIRMED",
+    "COMPLETED",
+)
 
 
 @pytest.fixture
@@ -50,6 +79,79 @@ async def _case_and_interaction(connection: AsyncConnection) -> tuple[str, str]:
         )
     ).scalar_one()
     return str(case_id), str(interaction_id)
+
+
+async def _referral_context(connection: AsyncConnection) -> tuple[str, str, str]:
+    case_id, _ = await _case_and_interaction(connection)
+    policy_id = (
+        await connection.execute(
+            text(
+                "INSERT INTO policy_versions "
+                "(policy_type, version_code, content_hash, effective_from) "
+                "VALUES ('REFERRAL', 'TEST-REFERRAL-POLICY', repeat('a', 64), now()) RETURNING id"
+            )
+        )
+    ).scalar_one()
+    authority_id = (
+        await connection.execute(
+            text(
+                "INSERT INTO processing_authority_types "
+                "(authority_code, display_name, authority_source_class, legal_reference, effective_from) "
+                "VALUES ('TEST-AUTHORITY', 'Test authority', 'STATUTORY', 'TEST-REF', now()) RETURNING id"
+            )
+        )
+    ).scalar_one()
+    purpose_id = (
+        await connection.execute(
+            text(
+                "INSERT INTO processing_purposes "
+                "(purpose_code, name, description, default_authority_code, policy_version_id) "
+                "VALUES ('TEST-REFERRAL-PURPOSE', 'Test referral', 'Synthetic test purpose', 'TEST-AUTHORITY', :policy_id) RETURNING id"
+            ),
+            {"policy_id": policy_id},
+        )
+    ).scalar_one()
+    authorization_id = (
+        await connection.execute(
+            text(
+                "INSERT INTO processing_authorizations "
+                "(case_id, processing_purpose_id, authority_type_id, authorization_reason, policy_version_id) "
+                "VALUES (:case_id, :purpose_id, :authority_id, 'Synthetic test authorization', :policy_id) RETURNING id"
+            ),
+            {
+                "case_id": case_id,
+                "purpose_id": purpose_id,
+                "authority_id": authority_id,
+                "policy_id": policy_id,
+            },
+        )
+    ).scalar_one()
+    return str(case_id), str(authorization_id), str(policy_id)
+
+
+async def _referral(
+    connection: AsyncConnection,
+    context: tuple[str, str, str],
+    status: str = "RECOMMENDED",
+) -> str:
+    case_id, authorization_id, policy_id = context
+    return str(
+        (
+            await connection.execute(
+                text(
+                    "INSERT INTO referrals "
+                    "(case_id, service_type, processing_authorization_id, status, policy_version_id) "
+                    "VALUES (:case_id, 'LEGAL_AID', :authorization_id, :status, :policy_id) RETURNING id"
+                ),
+                {
+                    "case_id": case_id,
+                    "authorization_id": authorization_id,
+                    "status": status,
+                    "policy_id": policy_id,
+                },
+            )
+        ).scalar_one()
+    )
 
 
 async def test_fresh_schema_is_within_budget_and_privacy_guardrails(
@@ -230,3 +332,85 @@ async def test_append_only_history_and_audit_protection(db_connection: AsyncConn
                 text("UPDATE case_status_events SET reason = 'tampered' WHERE id = :event_id"),
                 {"event_id": event_id},
             )
+
+
+async def test_historical_migrations_are_orm_independent() -> None:
+    revisions = Path(__file__).parents[1].joinpath("alembic", "versions")
+    forbidden = ("from app.db", "import app.db.models", "Base.metadata", "metadata.tables[")
+    for revision in revisions.glob("*.py"):
+        source = revision.read_text(encoding="utf-8")
+        assert not any(pattern in source for pattern in forbidden), revision.name
+
+
+async def test_referral_vocabulary_is_accepted_and_unknown_values_rejected(
+    db_connection: AsyncConnection,
+) -> None:
+    context = await _referral_context(db_connection)
+    for state in REFERRAL_STATES:
+        referral_id = await _referral(db_connection, context, state)
+        await db_connection.execute(
+            text(
+                "INSERT INTO referral_events (referral_id, new_status, reason) "
+                "VALUES (:referral_id, :state, 'Synthetic state coverage')"
+            ),
+            {"referral_id": referral_id, "state": state},
+        )
+
+    with pytest.raises(IntegrityError):
+        async with db_connection.begin_nested():
+            await _referral(db_connection, context, "UNKNOWN")
+    referral_id = await _referral(db_connection, context)
+    with pytest.raises(IntegrityError):
+        async with db_connection.begin_nested():
+            await db_connection.execute(
+                text(
+                    "INSERT INTO referral_events (referral_id, new_status, reason) "
+                    "VALUES (:referral_id, 'UNKNOWN', 'Synthetic invalid state')"
+                ),
+                {"referral_id": referral_id},
+            )
+
+
+async def test_support_outcome_stages_and_evidence_are_independent(
+    db_connection: AsyncConnection,
+) -> None:
+    referral_id = await _referral(db_connection, await _referral_context(db_connection))
+    for stage in SUPPORT_OUTCOME_STAGES:
+        await db_connection.execute(
+            text(
+                "INSERT INTO support_outcomes (referral_id, outcome_stage, evidence_state) "
+                "VALUES (:referral_id, :stage, 'UNVERIFIED')"
+            ),
+            {"referral_id": referral_id, "stage": stage},
+        )
+    with pytest.raises(IntegrityError):
+        async with db_connection.begin_nested():
+            await db_connection.execute(
+                text(
+                    "INSERT INTO support_outcomes (referral_id, outcome_stage, evidence_state) "
+                    "VALUES (:referral_id, 'UNKNOWN', 'UNVERIFIED')"
+                ),
+                {"referral_id": referral_id},
+            )
+    columns = {
+        row.column_name: row.udt_name
+        for row in (
+            await db_connection.execute(
+                text(
+                    "SELECT column_name, udt_name FROM information_schema.columns "
+                    "WHERE table_name = 'contact_attempt_policies' AND column_name LIKE 'safe_callback_%'"
+                )
+            )
+        ).mappings()
+    }
+    assert columns == {"safe_callback_start": "time", "safe_callback_end": "time"}
+    authority_columns = set(
+        await db_connection.scalars(
+            text(
+                "SELECT column_name FROM information_schema.columns "
+                "WHERE table_name = 'processing_authority_types'"
+            )
+        )
+    )
+    assert "authority_source_class" in authority_columns
+    assert "source_class" not in authority_columns

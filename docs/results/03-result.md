@@ -1,9 +1,11 @@
 # SIH26093 Packet 03 — PostgreSQL Domain Foundation
 
-**Status:** PARTIAL — database implementation and gates pass; repository E2E/security verification and owner review remain pending  
+**Status:** Historical baseline PARTIAL — remediated by Packet 03R; see [`03R-result.md`](./03R-result.md)
 **Owner Authorization:** PENDING  
 **Packet:** 03  
 **Date:** 2026-10-03
+
+This file preserves the original Packet 03 verification record. Its local baseline counts and limitations are historical; Packet 03R supplies the immutable-migration, referral/outcome semantics, generated-artifact cleanup, replay, and final-CI closure evidence.
 
 ## Objective
 
@@ -86,3 +88,7 @@ Start only after owner review. Packet 04 owns Authorization, RBAC, identity-back
 
 **Commit SHA:** `630af94` (amended below only if this metadata line changes)  
 **Repository cleanliness:** Packet 03 changes are committed; one generated `apps/web/tsconfig.tsbuildinfo` diff from the local frontend build remains intentionally unstaged.
+
+## Packet 03R closure note
+
+The generated TypeScript build-info artifact and model-coupled historical migrations described above were remediated in Packet 03R. Owner Review remains pending; no approval is implied by the remediation status.

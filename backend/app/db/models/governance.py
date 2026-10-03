@@ -140,7 +140,7 @@ class ProcessingAuthorityType(Base):
     )
     authority_code: Mapped[str] = mapped_column(String(80), nullable=False, unique=True)
     display_name: Mapped[str] = mapped_column(String(255), nullable=False)
-    source_class: Mapped[str] = mapped_column(String(50), nullable=False)
+    authority_source_class: Mapped[str] = mapped_column(String(50), nullable=False)
     legal_reference: Mapped[str] = mapped_column(String(500), nullable=False)
     jurisdiction: Mapped[str] = mapped_column(
         String(100), nullable=False, server_default=text("'IN'")
@@ -154,8 +154,8 @@ class ProcessingAuthorityType(Base):
 
     __table_args__ = (
         CheckConstraint(
-            "source_class IN ('STATUTORY','REGULATORY','CONSTITUTIONAL','EXECUTIVE_POLICY','PRODUCT_POLICY')",
-            name="processing_authority_types_source_class",
+            "authority_source_class IN ('STATUTORY','REGULATORY','CONSTITUTIONAL','EXECUTIVE_POLICY','PRODUCT_POLICY')",
+            name="processing_authority_types_authority_source_class",
         ),
         CheckConstraint(
             "status IN ('ACTIVE','SUPERSEDED','REVOKED')", name="processing_authority_types_status"

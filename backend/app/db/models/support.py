@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import uuid
-from datetime import datetime
+from datetime import datetime, time
 from typing import Any
 
 from sqlalchemy import (
@@ -14,6 +14,7 @@ from sqlalchemy import (
     Integer,
     String,
     Text,
+    Time,
     func,
     text,
 )
@@ -135,7 +136,9 @@ class Referral(Base):
     consent_event_id: Mapped[uuid.UUID | None] = mapped_column(
         _uuid(), ForeignKey("consent_events.id", ondelete="RESTRICT")
     )
-    status: Mapped[str] = mapped_column(String(30), nullable=False, server_default=text("'DRAFT'"))
+    status: Mapped[str] = mapped_column(
+        String(30), nullable=False, server_default=text("'RECOMMENDED'")
+    )
     priority: Mapped[str] = mapped_column(
         String(20), nullable=False, server_default=text("'NORMAL'")
     )
@@ -153,7 +156,7 @@ class Referral(Base):
 
     __table_args__ = (
         CheckConstraint(
-            "status IN ('DRAFT','REFERRED','CONTACTED','SERVICE_STARTED','COMPLETED','CANCELLED','UNABLE_TO_CONTACT')",
+            "status IN ('RECOMMENDED','REVIEW_REQUIRED','APPROVED','DECLINED','REFERRED','ACKNOWLEDGED','CONTACT_PENDING','CONTACTED','APPOINTMENT_SCHEDULED','SERVICE_STARTED','FOLLOW_UP_DUE','COMPLETED','UNABLE_TO_CONTACT','ESCALATED','CANCELLED')",
             name="referrals_status",
         ),
         CheckConstraint(
@@ -184,11 +187,11 @@ class ReferralEvent(Base):
 
     __table_args__ = (
         CheckConstraint(
-            "new_status IN ('DRAFT','REFERRED','CONTACTED','SERVICE_STARTED','COMPLETED','CANCELLED','UNABLE_TO_CONTACT')",
+            "new_status IN ('RECOMMENDED','REVIEW_REQUIRED','APPROVED','DECLINED','REFERRED','ACKNOWLEDGED','CONTACT_PENDING','CONTACTED','APPOINTMENT_SCHEDULED','SERVICE_STARTED','FOLLOW_UP_DUE','COMPLETED','UNABLE_TO_CONTACT','ESCALATED','CANCELLED')",
             name="referral_events_new_status",
         ),
         CheckConstraint(
-            "previous_status IS NULL OR previous_status IN ('DRAFT','REFERRED','CONTACTED','SERVICE_STARTED','COMPLETED','CANCELLED','UNABLE_TO_CONTACT')",
+            "previous_status IS NULL OR previous_status IN ('RECOMMENDED','REVIEW_REQUIRED','APPROVED','DECLINED','REFERRED','ACKNOWLEDGED','CONTACT_PENDING','CONTACTED','APPOINTMENT_SCHEDULED','SERVICE_STARTED','FOLLOW_UP_DUE','COMPLETED','UNABLE_TO_CONTACT','ESCALATED','CANCELLED')",
             name="referral_events_previous_status",
         ),
         Index("ix_referral_events_referral_time", "referral_id", "occurred_at"),
@@ -218,6 +221,10 @@ class SupportOutcome(Base):
     )
 
     __table_args__ = (
+        CheckConstraint(
+            "outcome_stage IN ('RECOMMENDED','REFERRED','ACKNOWLEDGED','CONTACTED','SERVICE_STARTED','FOLLOW_UP_CONFIRMED','COMPLETED')",
+            name="support_outcomes_outcome_stage",
+        ),
         CheckConstraint(
             "evidence_state IN ('UNVERIFIED','PROVIDER_CONFIRMED','CITIZEN_CONFIRMED','DUAL_CONFIRMED','DOCUMENT_CONFIRMED','UNABLE_TO_VERIFY')",
             name="support_outcomes_evidence_state",
@@ -267,8 +274,8 @@ class ContactAttemptPolicy(Base):
     )
     max_attempts: Mapped[int] = mapped_column(Integer, nullable=False)
     spacing_hours: Mapped[int] = mapped_column(Integer, nullable=False)
-    safe_callback_start: Mapped[str | None] = mapped_column(String(5))
-    safe_callback_end: Mapped[str | None] = mapped_column(String(5))
+    safe_callback_start: Mapped[time | None] = mapped_column(Time(timezone=False))
+    safe_callback_end: Mapped[time | None] = mapped_column(Time(timezone=False))
     alternative_channel: Mapped[str | None] = mapped_column(String(30))
 
     __table_args__ = (
