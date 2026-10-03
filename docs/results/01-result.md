@@ -320,5 +320,7 @@ To preserve architectural discipline, the following were intentionally excluded:
 ## 12. Git Commit SHA & Repository State
 
 - **Branch:** `main`
-- **Commit SHA:** `8352e24` (Full: `8352e24cedd96d4805d76b102149e310e1ce26a9`)
-- **Repository State:** Clean working tree, all gates verified green.
+- **Initial Baseline Commit SHA:** `5a88ec5579bd133d29dc9d08c9df88a8ed25d1f7`
+- **Historical CI Run:** `37093441943` (FAILED on backend-quality-gates and security-scan)
+- **Status:** `PARTIAL — REQUIRED REMEDIATION` (Superceded by PKT-01R)
+- **Remediated Baseline & Clean-CI Closure:** Refer to [`01R-result.md`](./01R-result.md)
