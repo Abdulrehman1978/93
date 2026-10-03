@@ -54,7 +54,7 @@ graph TD
 | **5** | **Indic Translation** | `VOLUNTARILY_PROVIDED_FOR_SPECIFIED_PURPOSE` | Bundled with cross-language communication | *"If you need support from a central agency, we translate your summary into Hindi or English."* | Revocable prior to dispatch. | Referral is routed exclusively to local district officers fluent in the native tongue. | Tied to case dossier retention (`RETENTION_POLICY_PENDING`). | Assigned cross-regional service providers. |
 | **6** | **Welfare & Health Referrals** | `CONSENT` (Except emergency life peril) | **Granular per agency** | *"Do you agree to share your contact details and this summary with a free legal aid lawyer / counsellor?"* | Revocable until referral is acknowledged and contact initiated. | Specific referral is aborted; alternative services offered. | Service partner retention policy (`RETENTION_POLICY_PENDING`). | Explicitly selected provider agency only (role-minimized). |
 | **7** | **Emergency Life-Safety Handoff** | `MEDICAL_EMERGENCY` / `PUBLIC_ORDER_OR_DISASTER_ASSISTANCE` | Emergency Lawful Basis (Human-Authorized) | *"If you are in immediate physical danger, our team can alert emergency services to assist you."* | Cannot be retracted once dispatch is executed; cancellation requires formal police coordination. | If citizen refuses and is competent, refusal is respected unless active violent felony in progress. | State Emergency Response log (`RETENTION_POLICY_PENDING`). | State ERSS 112 Control Room / Police Desk. |
-| **8** | **Research & Model Improvement** | `CONSENT` | **Strictly Unbundled Opt-In** | *"May we use an anonymized version of this conversation (with all names and addresses removed) to improve our system?"* | **Fully Revocable prior to irreversible anonymization.** Bounded 24-month retention schedule. | **ZERO EFFECT ON SERVICE DELIVERY.** Full assistance provided without difference. | Bounded 24-month review schedule; datasets retired or re-evaluated. Not indefinite. | Authorized AI safety researchers and evaluators. |
+| **8** | **Research & Model Improvement** | `CONSENT` | **Strictly Unbundled Opt-In** | *"May we use an anonymized version of this conversation (with all names and addresses removed) to improve our system?"* | **Fully Revocable while IDENTIFIABLE or PSEUDONYMIZED (prior to ANONYMIZED_VALIDATED state).** Bounded 24-month retention schedule. | **ZERO EFFECT ON SERVICE DELIVERY.** Full assistance provided without difference. | Bounded 24-month review schedule; datasets retired or re-evaluated. Not indefinite. | Authorized AI safety researchers and evaluators. |
 
 ---
 
@@ -66,8 +66,9 @@ Citizen-facing language and administrative policies must **never** promise:
 - *"Special Court direct access"*
 
 Whether a digital voice recording is admissible as legal evidence is strictly governed by statutory procedural laws:
-1. **Bharatiya Sakshya Adhiniyam, 2023 (BSA Section 63) / Indian Evidence Act (Section 65B):** Electronic records require formal certification by an authorized officer, proof of unbroken hash integrity (SHA-256), secure chain of custody, and judicial determination of relevance and authenticity.
-2. **Authoritative Plain-Language Phrasing:** The platform shall state:
+1. **Bharatiya Sakshya Adhiniyam, 2023 (BSA) — Section 63 (`CURRENT BASELINE`):** Electronic records require formal certification by an authorized officer, proof of unbroken integrity, secure chain of custody, and judicial determination of relevance and authenticity. *(Note: Indian Evidence Act, 1872 — Section 65B remains relevant only for `LEGACY / SAVED PROCEEDINGS WHERE BSA SECTION 170 APPLIES`).*
+2. **Cryptographic Hash Standard:** The platform employs SHA-256 digest calculation as an `INTERNAL_SECURITY_POLICY` for technical data verification; SHA-256 is **not** a statutory requirement under BSA Section 63.
+3. **Authoritative Plain-Language Phrasing:** The platform shall state:
    > *"You may choose to retain the recording as part of the case record where authorized and relevant. Admissibility in any legal proceeding depends on statutory procedure and the competent court."*
 
 ---
@@ -96,16 +97,25 @@ SAMBAL replaces false purging claims with an authoritative **Multi-Stage Deletio
 
 ---
 
-## 5. Research Anonymization & Revocation Resolution
+## 5. Research De-Identification, Re-Identification Risk & Retention Governance
 
-To resolve the contradiction between continuous revocability and anonymized training corpora:
-1. **Pre-Anonymization Phase:** During this window, research consent is **fully revocable**. A citizen revocation request immediately purges the raw record from the research ingestion queue.
-2. **Anonymization Event:** Records undergo irreversible cryptographic anonymization:
-   - Direct identifiers (name, phone, address, Aadhaar) are scrubbed.
-   - Indirect identifiers (locations, caste specifics, employer, relative names) are generalized or replaced with synthetic tokens.
-   - Voice audio (if consented) is converted into non-invertible acoustic feature embeddings or synthetic voice replicas.
-3. **Post-Anonymization Status:** Once the mathematical link to the individual is permanently severed, individual records cannot be identified, extracted, or selectively deleted. Notice explicitly informs the citizen of this technical boundary prior to consent.
-4. **Bounded Retention Schedule:** Research datasets are **never stored indefinitely**. They are subject to a **24-month bounded lifecycle**, after which the dataset version is retired, archived in an offline air-gapped vault, or systematically re-evaluated.
+To resolve the tension between continuous revocability and research datasets without false technical claims:
+
+### 5.1 Re-Identification Risk Taxonomy
+The platform avoids absolute claims of "irreversible mathematical anonymization" or "non-invertible voice embeddings", because acoustic embeddings and high-dimensional speech features can retain identifying vocal tract signatures. Data states are formally categorized as:
+- **`IDENTIFIABLE`:** Direct PII present (name, phone, address, raw voice audio).
+- **`PSEUDONYMIZED`:** Direct PII replaced with token identifiers; key held separately.
+- **`DE_IDENTIFIED`:** Direct and obvious indirect identifiers stripped or generalized.
+- **`ANONYMIZED_VALIDATED`:** Permitted **only** after a formal, documented re-identification risk evaluation establishes that re-identification is not reasonably possible for the defined threat model and auxiliary datasets.
+- **`SYNTHETIC`:** Fully artificially generated audio/text containing zero complainant data. (Note: Synthetic voice conversion of real complainant speech is treated as transformed speech, **not** automatically as validated anonymization).
+
+### 5.2 Consent & Lifecycle Protocol
+1. **Pre-Transformation Phase:** While data is `IDENTIFIABLE` or `PSEUDONYMIZED`, research consent is **fully revocable**. A citizen revocation request immediately purges the record from ingestion queues.
+2. **Post-Validation Status:** Once a dataset reaches `ANONYMIZED_VALIDATED`, individual records cannot be identified or singled out for extraction. Notice explicitly informs the citizen of this technical boundary prior to consent.
+3. **Strict Bounded Retention (No Indefinite Archival):** Archival is retention. Moving research data to "offline cold storage" or "air-gapped vaults" does **not** bypass retention limits. Research datasets operate under a strict **24-month bounded lifecycle**. At the end of 24 months, the system requires either:
+   - **`DELETE`:** Complete purge through verified multi-stage deletion; OR
+   - **`FORMALLY APPROVE NEW VERSIONED RETENTION PERIOD`:** Requires explicit documented justification, legal authority, source class, new expiry timestamp, designated approver ID, and an immutable audit event.
+
 
 ---
 
