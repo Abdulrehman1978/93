@@ -1,9 +1,11 @@
 # SAMBAL Product Policy — Human Oversight & Decision Governance
+## Consequential Action Authority Matrix, Operator Override Model & Emergency Authority
 
-> **Packet ID:** PKT-02  
+> **Packet ID:** PKT-02R  
 > **Status:** AUTHORITATIVE POLICY  
-> **Last Updated:** 2026-10-03  
+> **Evaluation Date:** 2026-10-03  
 > **Core Mandate:** Consequential Action Authority Matrix & Operator Override Model  
+> **Policy Source Classes:** `INTERNAL_SAFETY_POLICY` (Human-in-the-loop gates) / `STATUTORY` (Administrative accountability & DPDP-ready phased baseline)
 
 ---
 
@@ -12,9 +14,11 @@
 In high-stakes public safety and atrocity grievance systems, automated decision-making without rigorous human oversight creates severe risks of constitutional rights violations, physical endangerment, and systemic discrimination.
 
 SAMBAL strictly adheres to the principle of **Meaningful Human Control**:
-1. **AI as an Assistant, Not an Authority:** Machine learning models process unstructured speech, audio, and text to surface signals, summarize context, and suggest actions. AI never holds executive or legal authority.
+1. **AI as an Assistant, Not an Authority:** Machine learning models process unstructured speech, audio, and text to surface signals, summarize context, and suggest actions. AI never holds executive, legal, or emergency dispatch authority.
 2. **Mandatory Human Sign-off:** No referral can be dispatched, no emergency agency alerted, no citizen record shared, and no case closed without an explicit, authenticated human action.
-3. **Non-Destructive Overrides:** When an operator modifies or dismisses an AI suggestion, the system preserves the original AI output alongside the human decision, rationale, and timestamp for auditing.
+3. **No AI Emergency Overrides:** An AI model cannot trigger emergency exceptions to consent. Only an authenticated human operator or supervisor following standard operating procedures may invoke an emergency lawful basis (`MEDICAL_EMERGENCY`, `PUBLIC_ORDER_OR_DISASTER_ASSISTANCE`).
+4. **Internal Queue Escalation vs External Data Transmission:** Internal queue escalation (re-prioritizing an unreviewed case to a supervisor) is automated; however, any transmission of personal data outside the platform boundaries strictly requires human approval, an established lawful basis, data minimization, and audit logging.
+5. **Non-Destructive Overrides:** When an operator modifies or dismisses an AI suggestion, the system preserves the original AI output alongside the human decision, rationale, and timestamp for auditing.
 
 ---
 
@@ -35,15 +39,15 @@ graph TD
 
 | Consequential Action | AI May Suggest? | AI May Prepare Payload? | Frontline Operator Approval Required? | Supervisor Approval Required? | AI Autonomous Execution Forbidden? | Legal / Policy Reference |
 | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
-| **SVI Triage Band Assignment** | **YES** | **YES** | **YES** (Can accept/modify) | NO (Review in audits) | **FORBIDDEN** | DPDP Act Sec 9, FAIR AI Policy |
+| **SVI Triage Band Assignment** | **YES** | **YES** | **YES** (Can accept/modify) | NO (Review in audits) | **FORBIDDEN** | DPDP-Ready Fair AI Policy |
 | **Safety Alert Display** | **YES** (Flags candidate) | **YES** (Presents snippet) | NO (Alert renders immediately) | NO | Allowed to display alert | Triage Latency Minimization |
 | **Support Service Recommendation** | **YES** (Matches need) | **YES** (Pre-selects agency) | **YES** (Operator decides) | NO | **FORBIDDEN** | Citizen Consent Principle |
 | **Counselling / Mental Health Referral** | **YES** (Recommends) | **YES** (Drafts summary) | **YES** (Consent verified) | NO | **FORBIDDEN** | Tele-MANAS Protocol 2024 |
 | **Legal Aid (NALSA) Referral** | **YES** (Recommends) | **YES** (Extracts facts) | **YES** (Consent verified) | NO | **FORBIDDEN** | Legal Services Auth Act Sec 12 |
 | **Medical Assistance Referral** | **YES** (Flags injury) | **YES** (Pre-fills hospital) | **YES** (Urgent verify) | NO | **FORBIDDEN** | Medico-Legal Care Standards |
-| **Emergency / ERSS 112 Handoff** | **YES** (Flags imminent danger) | **YES** (Drafts location & threat) | **YES** (Confirms threat) | **YES** (Mandatory Sign-off) | **STRICTLY FORBIDDEN** | CrPC / BNSS, Life Safety Doctrine |
+| **Emergency / ERSS 112 Handoff** | **YES** (Flags imminent danger) | **YES** (Drafts location & threat) | **YES** (Confirms threat) | **YES** (Mandatory Sign-off) | **STRICTLY FORBIDDEN** | BNSS / Police Protocol, Life Safety Doctrine |
 | **Witness Protection Review Request** | **YES** (Flags intimidation) | **YES** (Drafts threat facts) | **YES** (Reviews facts) | **YES** (Mandatory Sign-off) | **STRICTLY FORBIDDEN** | Witness Protection Scheme 2018 |
-| **External Inter-Agency Data Sharing** | NO | **YES** (Applies minimization) | **YES** (Verifies consent) | **YES** (For non-standard targets) | **STRICTLY FORBIDDEN** | DPDP Act 2023 Sec 6 |
+| **External Inter-Agency Data Sharing** | NO | **YES** (Applies minimization) | **YES** (Verifies consent / lawful basis) | **YES** (For non-standard targets) | **STRICTLY FORBIDDEN** | Privacy-by-Design Baseline |
 | **Formal Atrocity Case Closure** | NO | NO | **YES** (Must certify support delivered) | **YES** (For High/Critical cases) | **STRICTLY FORBIDDEN** | PoA Rules 1995 Rule 12 |
 
 ---

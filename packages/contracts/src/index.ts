@@ -127,9 +127,9 @@ export const ProvenanceLabelSchema = z.enum([
 export type ProvenanceLabel = z.infer<typeof ProvenanceLabelSchema>;
 
 // =============================================================================
-// 6. Evidence Contract (Packet 02 Specification)
-// SVI relevance is non-linear and multidimensional. Does not enforce
-// an arbitrary additive formula. Final scoring model belongs to Packet 11.
+// 6. Evidence Contract (Packet 02R Data-Minimizing Specification)
+// References authoritative source testimony/transcript rather than duplicating
+// raw sensitive text by default. Zero additive SVI scoring weights encoded.
 // =============================================================================
 
 export const EvidenceModalitySchema = z.enum([
@@ -148,10 +148,10 @@ export const EvidenceItemSchema = z.object({
   assessment_id: z.string().uuid(),
   modality: EvidenceModalitySchema,
   signal_type: z.string(),
-  source_reference: z.string().optional(),
-  timestamp_start_ms: z.number().int().nonnegative().optional(),
-  timestamp_end_ms: z.number().int().nonnegative().optional(),
-  raw_snippet: z.string(),
+  source_reference: z.string(), // Authoritative URI/offset (e.g. "transcript#L12-L14")
+  source_start: z.number().int().nonnegative().optional(),
+  source_end: z.number().int().nonnegative().optional(),
+  display_excerpt: z.string().optional(), // Minimized excerpt strictly when needed for UI display
   confidence: z.number().min(0.0).max(1.0),
   quality_score: z.number().min(0.0).max(1.0).optional(),
   model_provider: z.string().optional(),
@@ -159,7 +159,6 @@ export const EvidenceItemSchema = z.object({
   translation_provenance: z.string().optional(),
   provenance: ProvenanceLabelSchema.default("AI_EXTRACTED"),
   uncertainty_state: UncertaintyStateSchema.default("NONE"),
-  provisional_signal_weight: z.number().optional(),
   human_review_status: z
     .enum(["PENDING", "CONFIRMED", "DISMISSED", "MODIFIED"])
     .default("PENDING"),
@@ -171,6 +170,7 @@ export type EvidenceItem = z.infer<typeof EvidenceItemSchema>;
 // =============================================================================
 // 7. Full SIH26093 Support Service Taxonomy & Freshness
 // Explicitly covers all SIH expected outcomes and verified public pathways.
+// Separates endpoint information freshness from adapter integration status.
 // =============================================================================
 
 export const SupportServiceTypeSchema = z.enum([
@@ -190,22 +190,62 @@ export const SupportServiceTypeSchema = z.enum([
 
 export type SupportServiceType = z.infer<typeof SupportServiceTypeSchema>;
 
+/** Endpoint contact information currency. */
 export const ServiceFreshnessStatusSchema = z.enum([
   "VERIFIED_CURRENT",
   "STALE",
   "UNKNOWN",
-  "SANDBOX",
-  "ADAPTER_READY",
-  "LIVE",
 ]);
 
 export type ServiceFreshnessStatus = z.infer<
   typeof ServiceFreshnessStatusSchema
 >;
 
+/** Technical integration capability of the dispatch adapter. */
+export const IntegrationStatusSchema = z.enum([
+  "NOT_CONFIGURED",
+  "SANDBOX",
+  "ADAPTER_READY",
+  "LIVE",
+  "DEGRADED",
+  "DISABLED",
+]);
+
+export type IntegrationStatus = z.infer<typeof IntegrationStatusSchema>;
+
 // =============================================================================
-// 8. Referral Lifecycle & Verified Support Outcome Model
+// 8. Lawful Basis & Policy Governance Model (Packet 02R Specification)
+// Distinct from consent. Grounded in Indian statutory & privacy-by-design baselines.
+// =============================================================================
+
+export const LawfulBasisSchema = z.enum([
+  "CONSENT",
+  "VOLUNTARILY_PROVIDED_FOR_SPECIFIED_PURPOSE",
+  "STATE_FUNCTION_UNDER_LAW",
+  "LEGAL_OBLIGATION",
+  "MEDICAL_EMERGENCY",
+  "PUBLIC_ORDER_OR_DISASTER_ASSISTANCE",
+  "OTHER_AUTHORIZED_LAWFUL_BASIS",
+]);
+
+export type LawfulBasis = z.infer<typeof LawfulBasisSchema>;
+
+export const PolicySourceClassSchema = z.enum([
+  "STATUTORY",
+  "OFFICIAL_GOVERNMENT_POLICY",
+  "OFFICIAL_SERVICE_POLICY",
+  "INTERNAL_SAFETY_POLICY",
+  "PILOT_CONFIGURATION",
+  "DEMO_CONFIGURATION",
+  "RESEARCH_ASSUMPTION",
+]);
+
+export type PolicySourceClass = z.infer<typeof PolicySourceClassSchema>;
+
+// =============================================================================
+// 9. Referral Lifecycle & Verified Support Outcome Model
 // Answering the core product USP: "Did support actually arrive?"
+// Separates operational referral state, outcome evidence, and administrative status.
 // =============================================================================
 
 export const ReferralStateSchema = z.enum([
@@ -228,6 +268,7 @@ export const ReferralStateSchema = z.enum([
 
 export type ReferralState = z.infer<typeof ReferralStateSchema>;
 
+/** Operational progression stages (RECOMMENDED != REFERRED != DELIVERED). */
 export const VerifiedSupportOutcomeSchema = z.enum([
   "RECOMMENDED",
   "REFERRED",
@@ -242,9 +283,38 @@ export type VerifiedSupportOutcome = z.infer<
   typeof VerifiedSupportOutcomeSchema
 >;
 
+/** Evidence provenance and confidence verifying actual support delivery. */
+export const SupportOutcomeEvidenceSchema = z.enum([
+  "UNVERIFIED",
+  "PROVIDER_CONFIRMED",
+  "CITIZEN_CONFIRMED",
+  "DUAL_CONFIRMED",
+  "DOCUMENT_CONFIRMED",
+  "UNABLE_TO_VERIFY",
+]);
+
+export type SupportOutcomeEvidence = z.infer<
+  typeof SupportOutcomeEvidenceSchema
+>;
+
 // =============================================================================
-// 9. Policy-Driven Follow-Up Model
-// Versioned and configurable per service type and urgency level.
+// 10. Data Retention & Deletion States (Packet 02R Ephemeral Doctrine)
+// Verifiable multi-stage deletion tracking across replicas and backups.
+// =============================================================================
+
+export const DeletionStateSchema = z.enum([
+  "DELETION_REQUESTED",
+  "PRIMARY_OBJECT_DELETED",
+  "RETENTION_HOLD",
+  "BACKUP_EXPIRY_PENDING",
+  "DELETION_VERIFIED",
+]);
+
+export type DeletionState = z.infer<typeof DeletionStateSchema>;
+
+// =============================================================================
+// 11. Policy-Driven Follow-Up Model
+// Versioned and configurable per service type, urgency level, and source authority.
 // =============================================================================
 
 export const FollowUpPolicySchema = z.object({
@@ -257,12 +327,13 @@ export const FollowUpPolicySchema = z.object({
   effective_from: z.string(),
   effective_to: z.string().optional(),
   source: z.string(),
+  source_class: PolicySourceClassSchema.default("INTERNAL_SAFETY_POLICY"),
 });
 
 export type FollowUpPolicy = z.infer<typeof FollowUpPolicySchema>;
 
 // =============================================================================
-// 10. Operator Override Model
+// 12. Operator Override Model
 // Preserves original AI output, human decision, reason, timestamp, and actor.
 // =============================================================================
 

@@ -1,9 +1,11 @@
 # SAMBAL Product Specification — Trauma-Informed UX & Civic Calm Design System
+## Foundational UX Philosophy, Civic Calm Tokens, Concealment Truth & Branding Limits
 
-> **Packet ID:** PKT-02  
+> **Packet ID:** PKT-02R  
 > **Status:** AUTHORITATIVE UX SPECIFICATION  
-> **Last Updated:** 2026-10-03  
+> **Evaluation Date:** 2026-10-03  
 > **Traceability:** Civic Calm Design System Tokens, GIGW 3.0 / WCAG 2.1 AA Standards  
+> **Policy Source Classes:** `INTERNAL_SAFETY_POLICY` (UX Safety) / `STATUTORY` (State Emblem Act 2005 compliance)
 
 ---
 
@@ -82,12 +84,23 @@ The interface strictly avoids hyper-saturated, anxiety-inducing primary colors:
 ### 4.1 Quick Exit Mechanism
 - **Visibility:** Present on all citizen-facing pages, pinned permanently in the top-right corner.
 - **Trigger:** Single tap or click, or keyboard shortcut (`ESC` key).
-- **Actions Executed in < 50ms:**
-  1. Window immediately navigates to a high-traffic, innocuous public site (`https://www.india.gov.in`).
-  2. Clears browser `sessionStorage`, active form state, and DOM inputs.
-  3. Replaces browser history entry so the "Back" button does not return to the complaint form.
+- **Execution Target:** `DESIGN_TARGET: immediate local navigation initiation` (actual end-to-end rendering and redirect latency to be formally benchmarked in Packet 29).
+- **Client Actions:**
+  1. Window immediately navigates via `window.location.replace` to an innocuous, high-traffic public portal (e.g. weather or general public utility portal).
+  2. Clears browser `sessionStorage`, active uncommitted form state, and DOM input fields.
+  3. Replaces browser history state so the browser "Back" button does not return to the complaint form.
 
-### 4.2 Silent Distress Mode Concealment
-- **Discreet Title:** Browser tab title displays *"Government Services Portal"*.
-- **Neutral Icon:** Uses the standard national emblem / generic portal favicon.
-- **No Sound Emission:** All HTML5 audio tags and Web Audio API contexts are explicitly muted.
+### 4.2 Documented Technical Limitations of Quick Exit
+The platform documents the following real-world technical boundaries so users and operators maintain truthful expectations:
+- **Outside Controlled Scope:** Quick Exit cannot purge browser history entries generated *prior* to entering the application or outside controlled navigation hooks.
+- **Network-Level Footprints:** Quick Exit cannot remove local DNS cache entries, Wi-Fi router query logs, or ISP-level connection logs.
+- **Operating System Footprints:** Does not wipe OS-level recent application activity, screenshot caches, clipboard history, or mobile app switcher preview cards.
+- **Device Spyware / Keyloggers:** Cannot conceal activity if the abuser has installed stalkerware, keyloggers, or hardware screen capture on the device.
+- **Submitted Data:** Quick Exit purges client state, but cannot delete records that have already been transmitted to and acknowledged by the server.
+
+### 4.3 Silent Distress Mode & Neutral Branding Standards
+- **Discreet Title:** Browser tab title displays *"Citizen Information Services"*.
+- **Neutral Generic Service Icon:** Uses a neutral, stylized civic icon (e.g. geometric leaf or abstract shield).
+- **Strict Prohibition on State Emblem in Prototype:**
+  Under the State Emblem of India (Prohibition of Improper Use) Act, 2005, the Lion Capital of Asoka and national emblem symbols are strictly reserved for official government entities. The prototype must **never** use the State Emblem in favicons or headers, ensuring it does not falsely imply official government status or endorsement prior to formal administrative authorization.
+- **No Sound Emission:** All HTML5 audio tags and Web Audio API contexts are explicitly muted by default.

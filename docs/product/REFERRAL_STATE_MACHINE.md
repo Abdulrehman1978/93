@@ -1,9 +1,11 @@
 # SAMBAL Product Specification — Referral State Machine & Verified Support
+## Closed-Loop Service Lifecycle, Multi-Tier Outcome Evidence & Configurable Operations
 
-> **Packet ID:** PKT-02  
+> **Packet ID:** PKT-02R  
 > **Status:** AUTHORITATIVE SPECIFICATION  
-> **Last Updated:** 2026-10-03  
+> **Evaluation Date:** 2026-10-03  
 > **Traceability:** SIH26093 Closed-Loop Support & Verified Redressal Outcomes  
+> **Policy Source Classes:** `INTERNAL_SAFETY_POLICY` / `PILOT_CONFIGURATION` (Operational SLAs) vs `STATUTORY` (PoA Rule 12(4) relief)
 
 ---
 
@@ -13,18 +15,45 @@ A fundamental flaw in existing public grievance helplines is that a case is mark
 
 SAMBAL establishes a closed-loop **Referral Lifecycle State Machine** governed by the project's defining principle:
 > **A recommendation is NOT an outcome.**  
-> A case cannot be certified as resolved until **Verified Support** is confirmed by both the provider and the citizen.
+> **A referral is NOT an outcome.**  
+> Delivered support begins at `SERVICE_STARTED`, and verified delivery is evaluated through explicit evidence tiers.
 
 ---
 
-## 2. The 15-State Referral Lifecycle
+## 2. Separation of Referral State, Outcome Evidence, and Case Status
+
+To prevent operational deadlocks and relational conflation, the system separates three distinct dimensions:
+
+```text
+┌─────────────────────────────────────────────────────────────────────────────┐
+│ 1. REFERRAL OPERATIONAL STATE                                               │
+│    Lifecycle of the dispatch task to the external agency                    │
+│    (RECOMMENDED -> APPROVED -> REFERRED -> CONTACTED -> COMPLETED)          │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ 2. SUPPORT OUTCOME EVIDENCE (SupportOutcomeEvidence)                        │
+│    Verification confidence and provenance regarding delivery                │
+│    (UNVERIFIED, PROVIDER_CONFIRMED, CITIZEN_CONFIRMED, DUAL_CONFIRMED,       │
+│     DOCUMENT_CONFIRMED, UNABLE_TO_VERIFY)                                   │
+├─────────────────────────────────────────────────────────────────────────────┤
+│ 3. CASE ADMINISTRATIVE STATUS                                               │
+│    Administrative redressal status of the overall citizen docket            │
+│    (INTAKE, ACTIVE_INVESTIGATION, MONITORING, ADMINISTRATIVELY_CLOSED)       │
+└─────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Invariant: `Referral.COMPLETED != Case.CLOSED`
+A single grievance case may generate multiple referrals across different domains (e.g. NALSA for bail opposition, Tele-MANAS for trauma counselling, Shelter for emergency relocation). Closing one referral does **not** close the case. Case closure requires authorized administrative sign-off by a designated District Officer or Supervisor.
+
+---
+
+## 3. The 15-State Referral Lifecycle
 
 ```mermaid
 stateDiagram-v2
-    [*] --> RECOMMENDED : AI Suggests / Operator Matches
+    [*] --> RECOMMENDED : Matching Engine / Operator Proposal
     
-    RECOMMENDED --> REVIEW_REQUIRED : High-Impact Service (ERSS / Protection)
-    RECOMMENDED --> APPROVED : Operator Confirms Standard Referral + Consent
+    RECOMMENDED --> REVIEW_REQUIRED : High-Impact (ERSS 112 / Protection)
+    RECOMMENDED --> APPROVED : Operator Approves + Lawful Basis Verified
     RECOMMENDED --> DECLINED : Citizen Declines Referral
     
     REVIEW_REQUIRED --> APPROVED : Supervisor Authorizes
@@ -32,13 +61,13 @@ stateDiagram-v2
     
     APPROVED --> REFERRED : Payload Dispatched to Provider
     REFERRED --> ACKNOWLEDGED : Provider System Confirms Receipt
-    REFERRED --> ESCALATED : No Receipt within SLA (Timeout)
+    REFERRED --> ESCALATED : No Receipt within Operational SLA
     
     ACKNOWLEDGED --> CONTACT_PENDING : Assigned to Field Officer / Counsellor
     CONTACT_PENDING --> CONTACTED : Provider Reaches Citizen
-    CONTACT_PENDING --> UNABLE_TO_CONTACT : 3 Unsuccessful Attempts
+    CONTACT_PENDING --> UNABLE_TO_CONTACT : Configured Outreach Exhausted
     
-    UNABLE_TO_CONTACT --> CONTACT_PENDING : Alternative Contact / Channel Retry
+    UNABLE_TO_CONTACT --> CONTACT_PENDING : Alternative Channel Retry
     UNABLE_TO_CONTACT --> ESCALATED : Retries Exhausted
     
     CONTACTED --> APPOINTMENT_SCHEDULED : Session / Hearing Fixed
@@ -47,118 +76,64 @@ stateDiagram-v2
     APPOINTMENT_SCHEDULED --> SERVICE_STARTED : Citizen Attends Service
     APPOINTMENT_SCHEDULED --> ESCALATED : No-Show / Breach of Protection
     
-    SERVICE_STARTED --> FOLLOW_UP_DUE : Service Milestone Reached
+    SERVICE_STARTED --> FOLLOW_UP_DUE : Follow-Up Interval Reached
     
-    FOLLOW_UP_DUE --> COMPLETED : Citizen & Provider Confirm Support Arrived
-    FOLLOW_UP_DUE --> ESCALATED : Citizen Reports Support Deficit / Harassment
+    FOLLOW_UP_DUE --> COMPLETED : Support Outcome Verified
+    FOLLOW_UP_DUE --> ESCALATED : Deficit Reported / Harm Ongoing
     
-    ESCALATED --> REVIEW_REQUIRED : Nodal Desk Re-Intervention
+    ESCALATED --> REVIEW_REQUIRED : Supervisor Re-Intervention
     
-    DECLINED --> CANCELLED : Logged with Audit Reason
+    DECLINED --> CANCELLED : Logged with Structured Audit Reason
     CANCELLED --> [*]
     COMPLETED --> [*]
 ```
 
 ---
 
-## 3. Comprehensive State Definitions & Transition Rules
+## 4. State Definitions & Flexible Completion Semantics
 
-### State 1: `RECOMMENDED`
-- **Meaning:** The system matching engine or operator has identified a candidate service pathway based on grievance facts.
-- **Actor:** AI Engine or Frontline Operator.
-- **Consent Gate:** Proposed to complainant; waiting for consent.
-- **Next States:** `REVIEW_REQUIRED`, `APPROVED`, `DECLINED`.
+### State 12: `COMPLETED` (Terminal Operational State)
+- **Meaning:** The referral workflow has concluded its operational cycle.
+- **Completion Evidence Rules:** Dual confirmation (`DUAL_CONFIRMED`) is the **gold standard**, but is **not** the sole operational way to close a referral. Realistic public administration scenarios must not deadlock:
+  1. **Dual Confirmation (`DUAL_CONFIRMED`):** Both provider and citizen explicitly confirm adequate support delivery. (Highest evidentiary tier).
+  2. **Citizen-Only Confirmation (`CITIZEN_CONFIRMED`):** Citizen confirms support arrived, even if provider administrative sync is pending.
+  3. **Document-Verified Delivery (`DOCUMENT_CONFIRMED`):** Official documentary evidence uploaded (e.g. Special Court order showing legal aid vakalatnama filed, FIR registration receipt, discharge slip).
+  4. **Provider-Only Confirmation (`PROVIDER_CONFIRMED`):** Provider certifies delivery with service documentation where citizen declined follow-up or requested no further calls.
+  5. **Unable to Verify (`UNABLE_TO_VERIFY`):** Follow-up attempts exhausted without citizen response, but provider confirms service attempted. **`UNABLE_TO_VERIFY` does NOT mean "support failed";** it records an honest epistemic boundary.
+- **Actor:** Helpline Follow-Up Officer or Supervisor.
 
-### State 2: `REVIEW_REQUIRED`
-- **Meaning:** Referral involves high-impact interventions (ERSS 112 emergency handoff, Witness Protection application, or inter-state transfer) requiring administrative clearance.
-- **Actor:** Shift Supervisor / District Nodal Officer.
-- **Next States:** `APPROVED`, `DECLINED`.
-
-### State 3: `APPROVED`
-- **Meaning:** The referral has been accepted by the operator (and supervisor if required), and explicit informed consent has been obtained from the complainant.
-- **Actor:** Operator or Supervisor.
-- **Data Payload Formed:** Minimized, role-scoped handoff dossier generated.
-- **Next States:** `REFERRED`, `CANCELLED`.
-
-### State 4: `DECLINED`
-- **Meaning:** Complainant explicitly opted out of this specific service, or supervisor rejected the referral as inappropriate.
-- **Actor:** Complainant or Supervisor.
-- **Audit Mandate:** Structured reason code captured (e.g. `DECLINED_BY_CITIZEN_PREFERS_PRIVATE_LAWYER`).
-- **Next States:** `CANCELLED` (terminal for this referral).
-
-### State 5: `REFERRED`
-- **Meaning:** Handoff packet has been securely transmitted to the receiving provider via API webhook, secure portal queue, or verified telephony bridge.
-- **Actor:** SAMBAL Channel Gateway.
-- **Next States:** `ACKNOWLEDGED`, `ESCALATED` (if SLA breached).
-
-### State 6: `ACKNOWLEDGED`
-- **Meaning:** The receiving partner agency (e.g. Tele-MANAS Cell or DLSA Front Office) has electronically confirmed receipt and entered the record into their intake queue.
-- **Actor:** Partner Agency Webhook / Receiving Officer.
-- **Next States:** `CONTACT_PENDING`.
-
-### State 7: `CONTACT_PENDING`
-- **Meaning:** Referral has been assigned to an individual case worker, advocate, or doctor; outreach to citizen is pending.
-- **Actor:** Provider Desk.
-- **Next States:** `CONTACTED`, `UNABLE_TO_CONTACT`.
-
-### State 8: `CONTACTED`
-- **Meaning:** Provider officer has successfully spoken to or met with the complainant.
-- **Actor:** Case Worker / Advocate / Counsellor.
-- **Verification Data:** Date/time of contact, channel used, safe contact confirmation.
-- **Next States:** `APPOINTMENT_SCHEDULED`, `SERVICE_STARTED`.
-
-### State 9: `APPOINTMENT_SCHEDULED`
-- **Meaning:** A formal counselling session, court filing date, hospital examination, or relief hearing has been scheduled.
-- **Actor:** Provider Officer.
-- **Verification Data:** Appointment date, venue/link, assigned professional.
-- **Next States:** `SERVICE_STARTED`, `ESCALATED` (if missed).
-
-### State 10: `SERVICE_STARTED`
-- **Meaning:** Concrete assistance is actively underway (e.g. counselling therapy in progress, FIR registered, bail opposition petition filed in Special Court, medical treatment administered).
-- **Actor:** Provider Officer.
-- **Next States:** `FOLLOW_UP_DUE`.
-
-### State 11: `FOLLOW_UP_DUE`
-- **Meaning:** Time interval reached where the helpline is scheduled to contact the citizen to verify service adequacy, physical safety, and redressal progress.
-- **Actor:** Automated Policy Scheduler.
-- **Next States:** `COMPLETED`, `ESCALATED`.
-
-### State 12: `COMPLETED` (Terminal Success)
-- **Meaning:** Dual-confirmation achieved: Provider confirms service delivered, and complainant confirms support was received and adequate.
-- **Actor:** Helpline Follow-up Officer.
-- **Audit Mandate:** Final outcome record signed off. Case archived.
-
-### State 13: `UNABLE_TO_CONTACT`
-- **Meaning:** Provider attempted outreach 3 times over 48 hours without citizen answering (e.g. phone switched off or out of coverage).
-- **Actor:** Provider Officer.
-- **Next States:** `CONTACT_PENDING` (via secondary emergency contact), `ESCALATED`.
-
-### State 14: `ESCALATED`
-- **Meaning:** SLA breach (unacknowledged referral), failure of contact, provider rejection, or complainant reporting ongoing threats during follow-up.
-- **Actor:** System Scheduler or Complainant.
-- **Next States:** `REVIEW_REQUIRED` (Supervisor Intervention).
-
-### State 15: `CANCELLED` (Terminal Exit)
-- **Meaning:** Referral terminated due to citizen withdrawal, duplicate docket, or supervisor determination.
-- **Actor:** Operator or Supervisor.
+### State 13: `UNABLE_TO_CONTACT` (Configurable Outreach Policy)
+- **Policy Decoupling:** The system does **not** hardcode "3 attempts over 48 hours" into code or database constraints.
+- Outreach parameters are defined in a versioned, configurable `ContactAttemptPolicy`:
+  ```typescript
+  interface ContactAttemptPolicy {
+    policy_id: string;
+    max_attempts: number; // default: 3 (PILOT_CONFIGURATION)
+    minimum_spacing_hours: number; // default: 12 (PILOT_CONFIGURATION)
+    safe_contact_window_start: string; // e.g. "09:00"
+    safe_contact_window_end: string; // e.g. "18:00"
+    alternative_channel_allowed: boolean; // SMS/IVR fallback
+    policy_source_class: "PILOT_CONFIGURATION";
+  }
+  ```
 
 ---
 
-## 4. Definition of "Verified Support" Hierarchy
+## 5. Definition of "Verified Support" Hierarchy
 
 To prevent premature claims of success in dashboards and reporting, SAMBAL codifies 7 strict **Verified Support Levels**:
 
 ```text
 ▲  HIGHEST PROOF OF IMPACT
 │
-├── Level 6: COMPLETED
-│   Both citizen and provider confirm support was successfully rendered and resolved.
+├── Level 6: COMPLETED (Verified via Dual / Document Confirmation)
+│   Both citizen and provider confirm support was successfully rendered, OR verified by legal/clinical records.
 │
 ├── Level 5: FOLLOW_UP_CONFIRMED
 │   Citizen confirms to independent helpline follow-up that support actually arrived.
 │
 ├── Level 4: SERVICE_STARTED
-│   Tangible intervention actively initiated (counselling session 1 held, FIR filed).
+│   Tangible intervention actively initiated (counselling session 1 held, FIR filed, relief disbursement).
 │
 ├── Level 3: CONTACTED
 │   First human-to-human contact established between provider and citizen.
@@ -180,30 +155,17 @@ To prevent premature claims of success in dashboards and reporting, SAMBAL codif
 
 ---
 
-## 5. Follow-Up Policy Architecture
+## 6. Follow-Up Policy Architecture & SLA Classification
 
-Follow-up intervals are configurable by policy rule based on the **Reported Incident Urgency** and **Support Service Type**:
+Follow-up intervals are configurable by policy rule based on the **Reported Incident Urgency** and **Support Service Type**. 
 
-```typescript
-export interface FollowUpSchedule {
-  urgency: ReportedUrgencyLevel;
-  service_type: SupportServiceType;
-  first_check_hours: number;
-  max_wait_to_contact_hours: number;
-  mandatory_escalation_hours: number;
-}
-```
+### Classification of Time Targets:
+All target timeframes below are classified as **`INTERNAL_DESIGN_TARGET` / `PILOT_CONFIGURATION`**, unless explicitly grounded in statutory law:
 
-### Default Baseline Intervals:
-- **Emergency / Active Violence (`CRITICAL` + `EMERGENCY_SUPPORT`):**
-  - First Check: **2 hours** post-handoff.
-  - Escalation SLA: **4 hours** if unacknowledged.
-- **High Vulnerability / Crisis Counselling (`URGENT` + `COUNSELLING`):**
-  - First Check: **12 hours** post-referral.
-  - Escalation SLA: **24 hours** if uncontacted.
-- **Legal Aid / FIR Assistance (`PRIORITY` + `LEGAL_AID`):**
-  - First Check: **48 hours** post-referral.
-  - Escalation SLA: **72 hours** if lawyer unassigned.
-- **Routine Welfare / Scholarship (`ROUTINE` + `SOCIAL_WELFARE_SUPPORT`):**
-  - First Check: **7 days** post-referral.
-  - Escalation SLA: **14 days** if unacknowledged.
+| Urgency & Service Category | First Check Target | Escalation Target | Policy Source Classification | Statutory Basis / Context |
+| :--- | :---: | :---: | :--- | :--- |
+| **CRITICAL + EMERGENCY_SUPPORT** | 2 hours | 4 hours | `INTERNAL_SAFETY_POLICY` | Emergency life-safety monitoring protocol. |
+| **URGENT + COUNSELLING** | 12 hours | 24 hours | `PILOT_CONFIGURATION` | Psychosocial crisis stabilization benchmark. |
+| **PRIORITY + LEGAL_AID** | 48 hours | 72 hours | `PILOT_CONFIGURATION` | Legal representation and bail response window. |
+| **ROUTINE + SOCIAL_WELFARE** | 7 days | 14 days | `PILOT_CONFIGURATION` | Administrative welfare processing schedule. |
+| **Statutory Relief Disbursement** | 7 days | 7 days | **`STATUTORY`** | **Rule 12(4), SC/ST (PoA) Rules, 1995:** Mandatory relief in cash or kind within 7 days. |

@@ -1,9 +1,11 @@
 # SAMBAL Product Specification — Support Service Taxonomy & Official Baselines
+## Standardized Redressal Pathways, Independent Status Dimensions & Verified Public Infrastructure
 
-> **Packet ID:** PKT-02  
+> **Packet ID:** PKT-02R  
 > **Status:** AUTHORITATIVE SPECIFICATION  
-> **Last Updated:** 2026-10-03  
+> **Evaluation Date:** 2026-10-03  
 > **Traceability:** SIH26093 Core Outcomes, MoSJE Schemes, PoA Act Rules 1995  
+> **Policy Source Classes:** `STATUTORY` (PoA Act/Rules, LSA Act) vs `PILOT_CONFIGURATION` (Operational Directory)
 
 ---
 
@@ -101,12 +103,19 @@ graph TD
 #### 10. `SOCIAL_WELFARE_SUPPORT`
 - **Scope:** Expedited access to scholarships, pension schemes, Dr. Ambedkar National Relief Scheme, and interim cash relief under PoA Rule 12(4).
 - **Primary Delivery Partner:** District Social Welfare Officer, Block Development Officer (BDO).
+- **Statutory Authority:** Rule 12(4) of the Scheduled Castes and the Scheduled Tribes (Prevention of Atrocities) Rules, 1995 (mandates immediate relief in cash or kind within seven days to victims of atrocity).
 - **Trigger Conditions:** Acute economic deprivation following caste victimization.
 
 #### 11. `FOLLOW_UP`
 - **Scope:** Scheduled check-ins by the helpline to verify service delivery, assess ongoing safety, and verify victim well-being.
-- **Primary Delivery Partner:** SAMBAL Follow-up Desk / Autonomous outbound IVR (consented).
-- **Trigger Conditions:** Triggered automatically post-referral based on configurable urgency policies.
+- **Primary Delivery Partner:** SAMBAL Follow-up Desk / **policy-scheduled consented outbound IVR**.
+- **Governance Safeguards:** Every follow-up contact must strictly respect:
+  - Safe callback time selected by the citizen.
+  - Complainant contact channel preference (Voice vs SMS).
+  - Silent-mode restrictions (zero voice calls if user flagged physical danger).
+  - Lawful basis / consent verification.
+  - Immediate compliance with citizen "Do Not Call" requests.
+- **Trigger Conditions:** Triggered based on configurable follow-up policies post-referral.
 
 #### 12. `OTHER_VERIFIED_SUPPORT`
 - **Scope:** Specialized community-based assistance, sign language interpretation, assistive devices for disabled victims.
@@ -162,10 +171,9 @@ Every public service pathway incorporated into SAMBAL must be verified against c
 
 ## 4. Service Source Freshness & Registry Standards
 
-Helplines frequently fail because directory numbers become obsolete or local contact officers transfer without updates. SAMBAL enforces a strict **Freshness Policy** for every directory record:
+Helplines frequently fail because directory numbers become obsolete or local contact officers transfer without updates. SAMBAL enforces independent tracking of directory freshness, technical integration, and operating availability:
 
 ### 4.1 Required Metadata Schema per Resource
-Every service resource in the internal directory must maintain:
 ```typescript
 interface ServiceResourceRecord {
   resource_id: string;
@@ -178,16 +186,25 @@ interface ServiceResourceRecord {
   supported_languages: string[];
   last_verified_at: string; // ISO 8601 UTC
   verified_by: string;      // Officer ID
-  freshness_status: ServiceFreshnessStatus;
+  freshness_status: ServiceFreshnessStatus; // VERIFIED_CURRENT | STALE | UNKNOWN
+  integration_status: IntegrationStatus;   // NOT_CONFIGURED | SANDBOX | ADAPTER_READY | LIVE | DEGRADED | DISABLED
+  availability_status: "AVAILABLE_24_7" | "BUSINESS_HOURS" | "OFFLINE";
   capacity_status: "AVAILABLE" | "CONGESTED" | "OFFLINE" | "UNKNOWN";
-  integration_status: "LIVE" | "ADAPTER_READY" | "SANDBOX";
+  verification_method: "OFFICIAL_GAZETTE" | "DIRECT_API" | "MANUAL_AUDIT";
 }
 ```
 
-### 4.2 Freshness Status Definitions
+### 4.2 Independent Status Definitions
+
+#### A. Directory Freshness Status (`ServiceFreshnessStatus`)
 - **`VERIFIED_CURRENT`:** Endpoint verified within the last 30 days by direct ping, administrative check, or test call. Permitted for primary routing.
 - **`STALE`:** Endpoint has not been verified within 30 days. Operator is warned: `WARNING: CONTACT DETAILS MAY BE OUTDATED`.
 - **`UNKNOWN`:** Unverified record imported from legacy directories; requires operator manual confirmation before dispatch.
+
+#### B. Software Integration Status (`IntegrationStatus`)
+- **`NOT_CONFIGURED`:** Initial directory entry; software adapter has not been developed.
 - **`SANDBOX`:** Mock test adapter used in development, training, and judge evaluations.
 - **`ADAPTER_READY`:** Clean software interface implemented; waiting for production credentials / government network peering.
 - **`LIVE`:** Production API or telephony trunk actively connected.
+- **`DEGRADED`:** Outbound adapter experiencing timeouts or downstream API errors.
+- **`DISABLED`:** Administratively disabled due to security review or service discontinuation.

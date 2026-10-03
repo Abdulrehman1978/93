@@ -1,9 +1,11 @@
 # SAMBAL AI Policy — Stress Vulnerability Index (SVI) Specification
+## Qualitative Triage Bands, Non-Linear Principles & Architectural Constraints
 
-> **Packet ID:** PKT-02  
+> **Packet ID:** PKT-02R  
 > **Status:** AUTHORITATIVE AI POLICY  
-> **Last Updated:** 2026-10-03  
+> **Evaluation Date:** 2026-10-03  
 > **Traceability:** SIH26093 SVI Triage Mandate, Responsible AI Framework  
+> **Policy Source Class:** `INTERNAL_SAFETY_POLICY` (Triage Prioritization)
 
 ---
 
@@ -12,19 +14,22 @@
 The Stress Vulnerability Index (SVI) is an algorithmic triage construct designed to solve a single operational challenge in high-volume public helplines:
 > **"How much vulnerability/distress-related concern is present in the available evidence to prioritize human review?"**
 
-### 1.1 SVI Status in Packet 02
+### 1.1 SVI Status in Packet 02 & 02R
 ```text
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │ CURRENT STATUS:                   PROVISIONAL_TRIAGE_POLICY                 │
 │                                                                             │
 │ STRICT ARCHITECTURAL DOCTRINE:                                              │
-│ - Packet 02 defines conceptual dimensions, safety rules, and bands.         │
+│ - Packet 02/02R defines conceptual dimensions, safety rules, and bands.     │
 │ - ZERO MATHEMATICAL WEIGHTS (e.g. 0.3*text + 0.2*voice) ARE ENCODED HERE.   │
 │ - NO ARBITRARY LINEAR ARITHMETIC OR FAKE CLINICAL PRECISION.                │
 │ - Empirical mathematical fusion and ROC/AUC tuning belong strictly to       │
 │   PACKET 11 (Multimodal Fusion & SVI Scoring Engine).                       │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
+
+### 1.2 Evidence Contract Invariant (Packet 02R Remediation)
+In strict alignment with this doctrine, the shared evidence contract (`EvidenceItemSchema`) contains **zero additive weight columns** (such as `provisional_signal_weight` or `score_contribution`). Evidence rows describe detected phenomena, source pointers, timestamps, and confidence scores. The database schema in Packet 03 must not allocate numeric delta columns for unvalidated additive formulas.
 
 ---
 

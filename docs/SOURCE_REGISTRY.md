@@ -1,9 +1,10 @@
-# SAMBAL Source Registry — Verified Official Public Service Baselines
+# SAMBAL Source Registry — Verified Official Public Service Baselines & Statutory Citations
+## Verified Public Helplines, Statutory Frameworks & Phased Commencement Milestones
 
-> **Packet ID:** PKT-02  
+> **Packet ID:** PKT-02R  
 > **Status:** AUTHORITATIVE REGISTRY  
-> **Last Verified At:** 2026-10-03  
-> **Traceability:** SIH26093 Government Integrations, Official Public Services  
+> **Evaluation Date:** 2026-10-03  
+> **Traceability:** SIH26093 Government Integrations, Official Public Services, Statutory Grounding  
 
 ---
 
@@ -92,3 +93,30 @@ No integration may claim `LIVE` status unless real production credentials, authe
   - SAMBAL acts as the AI-assisted intelligence, triage, and multi-agency referral layer directly augmenting NHAA call-center and portal workflows.
 - **Current Truth Status:** `ADAPTER_READY` (Local canonical adapter framework implemented).
 - **Source Verification URL:** `https://nhaa.dosje.gov.in`
+
+---
+
+### Registry Entry 6: Phased DPDP Act 2023 Commencement & Rules Baseline
+- **Official Statute:** Digital Personal Data Protection Act, 2023 (Act No. 22 of 2023)
+- **Commencement Notification:** Ministry of Electronics and Information Technology (MeitY) Gazette Notification S.O. 5042(E) dated **13 November 2025**.
+- **Enforcement Timeline Status (As of Evaluation Date: 2026-10-03):**
+  - *Initial Commencement:* Establishment of Data Protection Board provisions and foundational definitions.
+  - *18-Month Phased Runway:* Key substantive operational sections governing:
+    - Grounds for processing (Sections 4, 5)
+    - Detailed notice & consent mandates (Sections 6, 7)
+    - General obligations of data fiduciaries (Section 8)
+    - Additional obligations regarding children (Section 9)
+    - Rights and duties of data principals (Sections 11–15)
+    commence upon the expiry of 18 months from the notification date (effective **May 2027**).
+- **SAMBAL Compliance Status:** `DPDP_READY` / `PRIVACY_BY_DESIGN_BASELINE`.
+  - Architectural contracts, granular purpose registers, and consent ledgers are built in anticipation of full operational enforcement.
+  - System avoids claiming that non-commenced sections are currently binding positive law as of October 2026.
+
+---
+
+### Registry Entry 7: Statutory PoA Relief Mandate (Rule 12(4))
+- **Statutory Instrument:** The Scheduled Castes and the Scheduled Tribes (Prevention of Atrocities) Rules, 1995 (as amended 2016).
+- **Rule Provision:** **Rule 12, Sub-rule (4):**
+  > *"The District Magistrate or the Sub-Divisional Magistrate or any other Executive Magistrate shall provide immediate relief in cash or in kind to the victims of atrocity, their family members and dependents within seven days of the incident..."*
+- **SLA Classification:** **`STATUTORY_REQUIREMENT`** (Legally binding timeline on district administration).
+- **SAMBAL Architectural Role:** Dedicated alert tracking in the District Officer dashboard to ensure the statutory 7-day relief milestone is flagged and audited.
