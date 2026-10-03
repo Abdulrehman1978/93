@@ -58,6 +58,22 @@ jobs:
           cd backend
           uv run mypy app
 
+      - name: Apply fresh PostgreSQL migrations
+        env:
+          DATABASE_URL: postgresql+asyncpg://sambal_user:sambal_secure_pass@localhost:5432/sambal_db
+          ENVIRONMENT: testing
+        run: |
+          cd backend
+          uv run alembic upgrade head
+
+      - name: Verify Alembic schema drift is zero
+        env:
+          DATABASE_URL: postgresql+asyncpg://sambal_user:sambal_secure_pass@localhost:5432/sambal_db
+          ENVIRONMENT: testing
+        run: |
+          cd backend
+          uv run alembic check
+
       - name: Run Backend Unit & Integration Tests
         env:
           DATABASE_URL: postgresql+asyncpg://sambal_user:sambal_secure_pass@localhost:5432/sambal_db

@@ -15,6 +15,7 @@ dependencies = [
     "python-multipart>=0.0.9",
     "boto3>=1.34.0",
     "botocore>=1.34.0",
+    "alembic>=1.13.0",
 ]
 
 [project.optional-dependencies]
@@ -29,6 +30,14 @@ dev = [
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[project.scripts]
+db-migrate = "app.db.cli:migrate"
+db-reset = "app.db.cli:reset"
+db-seed = "app.db.cli:seed"
+db-check = "app.db.cli:check"
+db-drift = "app.db.cli:drift"
+db-test = "app.db.cli:test"
 
 [tool.hatch.build.targets.wheel]
 packages = ["app"]
@@ -71,3 +80,6 @@ addopts = "-ra -q --strict-markers"
 asyncio_mode = "auto"
 testpaths = ["tests"]
 python_files = ["test_*.py"]
+markers = [
+    "integration: requires the canonical PostgreSQL database",
+]

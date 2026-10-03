@@ -17,7 +17,7 @@
 | **PKT-01R** | **Repository Foundation Remediation & Clean-CI Closure** | **PASS** | Phase 1 — Platform Core | DevSecOps / Staff Systems Engineer | [`docs/results/01R-result.md`](./results/01R-result.md) |
 | **PKT-02** | Product, Safety & Service Specification | **PASS** (via 02R) | Phase 1 — Platform Core | Principal Product Manager / Safety Advisor | [`docs/results/02-result.md`](./results/02-result.md) |
 | **PKT-02R** | **Pre-Database Product, Privacy & Domain Contract Remediation** | **PASS** | Phase 1 — Platform Core | Principal Product Manager / Safety Advisor | [`docs/results/02R-result.md`](./results/02R-result.md) |
-| **PKT-03** | Database Foundation & Domain Schema | NOT_STARTED | Phase 1 — Platform Core | Data Architect / Backend Lead | `docs/results/03-result.md` |
+| **PKT-03** | Database Foundation & Domain Schema | IN_PROGRESS | Phase 1 — Platform Core | Data Architect / Backend Lead | `docs/results/03-result.md` |
 | **PKT-04** | Authorization, RBAC & Privacy Foundation | NOT_STARTED | Phase 1 — Platform Core | Security Architect / Privacy Engineer | `docs/results/04-result.md` |
 | **PKT-05** | Civic Calm Design System & Primitives | NOT_STARTED | Phase 1 — Platform Core | Principal UX Designer / A11y Lead | `docs/results/05-result.md` |
 | **PKT-06** | Channel Gateway & Consent Engine | NOT_STARTED | Phase 2 — Ingestion & Safety | Real-Time Systems / API Architect | `docs/results/06-result.md` |
