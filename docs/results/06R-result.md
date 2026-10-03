@@ -39,7 +39,8 @@ Packet 06R closes the Packet 06 baseline blockers around canonical consent autho
 - Alembic upgrade to `0010_packet06_consent_hardening`: passed locally.
 - Alembic drift check: passed locally (`No new upgrade operations detected`).
 - Ruff format/check and mypy: passed locally after formatting.
-- Frontend gates and repository CI: recorded below after the final evidence commit.
+- Frontend gates: Prettier, contracts/web typecheck, ESLint, Vitest 16/16, production build, and remote Playwright/Axe 12/12 passed.
+- Remote CI: backend migration replay, Alembic drift, mypy, Ruff, PostgreSQL tests, OpenAPI generation, frontend gates, Gitleaks, npm audit, and pip-audit all passed.
 
 ## Known limits and handoff
 
@@ -47,8 +48,8 @@ Packet 06 remains a gateway and consent boundary. It does not capture audio, run
 
 ## Final evidence
 
-- Implementation commit: pending final commit
-- Final Packet 06R CI: pending final CI run
+- Implementation commit: `aeff2621480d00888f6a5311fec0fc0007f165c7`
+- Final Packet 06R CI: [37126028108 — SUCCESS](https://github.com/Abdulrehman1978/93/actions/runs/37126028108)
 - Expected branch: `main`
 - Expected working tree: clean and synchronized with `origin/main`
 
