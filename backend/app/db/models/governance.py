@@ -194,6 +194,7 @@ class ProcessingAuthorization(Base):
     )
     external_actor_reference: Mapped[str | None] = mapped_column(String(255))
     authorization_reason: Mapped[str] = mapped_column(Text, nullable=False)
+    status: Mapped[str] = mapped_column(String(20), nullable=False, server_default=text("'ACTIVE'"))
     policy_version_id: Mapped[uuid.UUID] = mapped_column(
         _uuid(), ForeignKey("policy_versions.id", ondelete="RESTRICT"), nullable=False
     )
@@ -201,6 +202,7 @@ class ProcessingAuthorization(Base):
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
     expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
     __table_args__ = (
         CheckConstraint(
@@ -210,6 +212,14 @@ class ProcessingAuthorization(Base):
         CheckConstraint(
             "expires_at IS NULL OR expires_at >= created_at",
             name="processing_authorizations_expiry",
+        ),
+        CheckConstraint(
+            "status IN ('ACTIVE','REVOKED','EXPIRED','SUPERSEDED')",
+            name="processing_authorizations_status",
+        ),
+        CheckConstraint(
+            "status = 'ACTIVE' OR revoked_at IS NOT NULL OR status = 'EXPIRED'",
+            name="processing_authorizations_inactive_timestamp",
         ),
         Index("ix_processing_authorizations_actor_id", "actor_id"),
         Index("ix_processing_authorizations_case_id", "case_id"),
@@ -226,6 +236,9 @@ class ConsentEvent(Base):
     subject_id: Mapped[uuid.UUID] = mapped_column(
         _uuid(), ForeignKey("subjects.id", ondelete="RESTRICT"), nullable=False
     )
+    interaction_id: Mapped[uuid.UUID | None] = mapped_column(
+        _uuid(), ForeignKey("interactions.id", ondelete="RESTRICT")
+    )
     case_id: Mapped[uuid.UUID | None] = mapped_column(
         _uuid(), ForeignKey("cases.id", ondelete="RESTRICT")
     )
@@ -237,6 +250,9 @@ class ConsentEvent(Base):
         _uuid(), ForeignKey("policy_versions.id", ondelete="RESTRICT"), nullable=False
     )
     channel: Mapped[str] = mapped_column(String(30), nullable=False)
+    action_id: Mapped[str | None] = mapped_column(String(255))
+    served_locale: Mapped[str | None] = mapped_column(String(20))
+    translation_status: Mapped[str | None] = mapped_column(String(30))
     actor_id: Mapped[uuid.UUID | None] = mapped_column(
         _uuid(), ForeignKey("actors.id", ondelete="RESTRICT")
     )
@@ -255,9 +271,21 @@ class ConsentEvent(Base):
             name="consent_events_choice",
         ),
         CheckConstraint(
-            "channel IN ('PORTAL','VOICE','TEXT','IVR','OPERATOR','SYSTEM')",
+            "channel IN ('WEB','PORTAL','IVR','TELEPHONY','CHATBOT','MOBILE','OPERATOR','SYSTEM')",
             name="consent_events_channel",
+        ),
+        CheckConstraint(
+            "translation_status IS NULL OR translation_status IN ('AUTHORITATIVE','HUMAN_VERIFIED','MACHINE_TRANSLATED','FALLBACK_LANGUAGE','NOT_AVAILABLE')",
+            name="consent_events_translation_status",
         ),
         Index("ix_consent_events_actor_id", "actor_id"),
         Index("ix_consent_events_subject_purpose_time", "subject_id", "purpose_id", "occurred_at"),
+        Index("ix_consent_events_interaction_id", "interaction_id"),
+        Index(
+            "uq_consent_events_interaction_action",
+            "interaction_id",
+            "action_id",
+            unique=True,
+            postgresql_where=text("interaction_id IS NOT NULL AND action_id IS NOT NULL"),
+        ),
     )

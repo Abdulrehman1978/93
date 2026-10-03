@@ -351,3 +351,154 @@ export const OperatorOverrideActionSchema = z.enum([
 export type OperatorOverrideAction = z.infer<
   typeof OperatorOverrideActionSchema
 >;
+
+// =============================================================================
+// 13. Packet 06 Canonical Channel Gateway & Consent Contracts
+// =============================================================================
+
+export const ChannelTypeSchema = z.enum([
+  "WEB",
+  "PORTAL",
+  "IVR",
+  "TELEPHONY",
+  "CHATBOT",
+  "MOBILE",
+  "OPERATOR",
+  "SYSTEM",
+]);
+export type ChannelType = z.infer<typeof ChannelTypeSchema>;
+
+export const InteractionModeSchema = z.enum([
+  "UNSELECTED",
+  "VOICE",
+  "TEXT",
+  "SILENT",
+]);
+export type InteractionMode = z.infer<typeof InteractionModeSchema>;
+
+export const ChannelCapabilityStatusSchema = z.enum([
+  "LIVE_TESTED",
+  "ADAPTER_READY",
+  "NOT_CONFIGURED",
+  "DISABLED",
+]);
+
+export const ChannelCapabilitySchema = z.object({
+  channel: ChannelTypeSchema,
+  status: ChannelCapabilityStatusSchema,
+  supported_modes: z.array(InteractionModeSchema),
+  provider_code: z.string().nullable(),
+  public_entrypoint: z.boolean(),
+  human_review_required: z.boolean(),
+  note: z.string(),
+});
+export type ChannelCapability = z.infer<typeof ChannelCapabilitySchema>;
+
+export const ChannelSessionCreateSchema = z.object({
+  channel: z.literal("WEB").default("WEB"),
+  interaction_mode: InteractionModeSchema.default("UNSELECTED"),
+  locale: z
+    .string()
+    .regex(/^[A-Za-z-]+$/)
+    .min(2)
+    .max(20)
+    .default("en"),
+  client_request_id: z.string().min(1).max(255).optional(),
+});
+export type ChannelSessionCreate = z.infer<typeof ChannelSessionCreateSchema>;
+
+export const ChannelSessionResponseSchema = z.object({
+  session_id: z.string().uuid(),
+  session_token: z.string().min(1),
+  expires_at: z.string().datetime(),
+  channel: z.literal("WEB"),
+  interaction_mode: InteractionModeSchema,
+  policy_version: z.string(),
+  available_modes: z.array(InteractionModeSchema),
+});
+export type ChannelSessionResponse = z.infer<
+  typeof ChannelSessionResponseSchema
+>;
+
+export const SessionStateResponseSchema = z.object({
+  session_id: z.string().uuid(),
+  channel: ChannelTypeSchema,
+  interaction_mode: InteractionModeSchema,
+  status: z.enum(["OPEN", "COMPLETED", "ABANDONED", "FAILED"]),
+  language: z.string().nullable(),
+  expires_at: z.string().datetime().nullable(),
+  last_activity_at: z.string().datetime().nullable(),
+  policy_version: z.string().nullable(),
+});
+export type SessionStateResponse = z.infer<typeof SessionStateResponseSchema>;
+
+export const ConsentChoiceSchema = z.enum(["GRANTED", "DECLINED", "REVOKED"]);
+export type ConsentChoice = z.infer<typeof ConsentChoiceSchema>;
+
+export const ConsentModeSchema = z.enum([
+  "REQUIRED",
+  "OPTIONAL",
+  "NOT_REQUIRED",
+  "PROHIBITED_WITHOUT_HUMAN_AUTHORIZATION",
+]);
+
+export const ConsentRequirementSchema = z.object({
+  purpose_code: z.string(),
+  name: z.string(),
+  lawful_basis: z.string(),
+  consent_mode: ConsentModeSchema,
+  notice_required: z.boolean(),
+  notice_version: z.string(),
+  can_decline: z.boolean(),
+  effect_of_decline: z.string(),
+  can_revoke: z.boolean(),
+  human_approval_required: z.boolean(),
+  why_needed: z.string(),
+  data_categories: z.array(z.string()),
+  recipients: z.array(z.string()),
+  retention_status: z.string(),
+});
+export type ConsentRequirement = z.infer<typeof ConsentRequirementSchema>;
+
+export const ConsentDecisionRequestSchema = z.object({
+  purpose_code: z
+    .string()
+    .regex(/^[A-Z0-9-]+$/)
+    .min(1)
+    .max(50),
+  choice: ConsentChoiceSchema,
+  policy_version: z.string().min(1).max(80),
+  client_action_id: z.string().min(1).max(255),
+});
+export type ConsentDecisionRequest = z.infer<
+  typeof ConsentDecisionRequestSchema
+>;
+
+export const ConsentReceiptSchema = z.object({
+  consent_event_id: z.string().uuid(),
+  purpose_code: z.string(),
+  choice: ConsentChoiceSchema,
+  policy_version: z.string(),
+  recorded_at: z.string().datetime(),
+  current_processing_authorized: z.boolean(),
+});
+export type ConsentReceipt = z.infer<typeof ConsentReceiptSchema>;
+
+export const SessionPolicyResponseSchema = z.object({
+  policy_version: z.string(),
+  requested_locale: z.string(),
+  served_locale: z.string(),
+  translation_status: z.enum([
+    "AUTHORITATIVE",
+    "HUMAN_VERIFIED",
+    "MACHINE_TRANSLATED",
+    "FALLBACK_LANGUAGE",
+    "NOT_AVAILABLE",
+  ]),
+  required_notices: z.array(ConsentRequirementSchema),
+  optional_consents: z.array(ConsentRequirementSchema),
+  available_alternatives: z.array(z.string()),
+  current_decisions: z.record(z.string(), ConsentChoiceSchema),
+  capabilities: z.array(ChannelCapabilitySchema),
+});
+export type SessionPolicyResponse = z.infer<typeof SessionPolicyResponseSchema>;

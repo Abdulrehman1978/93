@@ -42,3 +42,12 @@
 | `CLM-15` | Protected backend operations use deny-by-default hybrid RBAC/ABAC with object, organization, jurisdiction, assignment, and purpose checks. | Security | `IMPLEMENTED` | `backend/app/security/authorization.py`; `tests/test_security_authorization.py`; `docs/security/AUTHORIZATION_MODEL.md` | Concrete policy tuning and production role provisioning remain deployment governance. |
 | `CLM-16` | Highly sensitive contact values have an AES-256-GCM envelope and external key-provider boundary. | Privacy / Security | `IMPLEMENTED` | `backend/app/security/encryption.py`; raw SQL test; `docs/security/FIELD_ENCRYPTION.md` | Production rollout requires a controlled re-encryption runbook for any pre-existing plaintext. |
 | `CLM-17` | Packet 04 does not claim PostgreSQL RLS enforcement. | Security transparency | `IMPLEMENTED` | `docs/security/RLS_DECISION.md`; application PDP/PEP tests | RLS adoption is deferred to a later independent security gate. |
+
+## Packet 06 implementation claims
+
+| Claim ID | Product Claim Statement | Truth Status | Evidence | Limitation |
+| --- | --- | --- | --- | --- |
+| `CLM-18` | The public channel gateway has one live first-party web entrypoint and explicit non-live adapter states. | `IMPLEMENTED` | `backend/app/channel/registry.py`; `docs/channel/CHANNEL_GATEWAY.md` | External provider credentials/integrations are not configured. |
+| `CLM-19` | Anonymous session credentials are stored as digests with bounded idle and absolute lifetime. | `IMPLEMENTED` | `backend/app/channel/session.py`; migration 0009 | This does not replace deployment-layer TLS, WAF, rate limiting, or secret rotation. |
+| `CLM-20` | Consent decisions are purpose-specific, append-only, revocable, stale-policy protected, and idempotent. | `IMPLEMENTED` | `backend/app/privacy/consent_engine.py`; Packet 06 tests | Later packets still own provider-specific handoff and retention execution. |
+| `CLM-21` | Packet 06 is DPDP-ready architecture baseline, not DPDP certification or legal advice. | `READINESS_TARGET` | `docs/privacy/PROCESSING_PURPOSE_REGISTER.md`; official MeitY sources | Deployment legal review and phased operational obligations remain required. |

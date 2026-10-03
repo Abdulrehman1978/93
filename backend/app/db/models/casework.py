@@ -201,10 +201,16 @@ class Interaction(Base):
     id: Mapped[uuid.UUID] = mapped_column(
         _uuid(), primary_key=True, server_default=text("gen_random_uuid()")
     )
-    case_id: Mapped[uuid.UUID] = mapped_column(
-        _uuid(), ForeignKey("cases.id", ondelete="RESTRICT"), nullable=False
+    subject_id: Mapped[uuid.UUID] = mapped_column(
+        _uuid(), ForeignKey("subjects.id", ondelete="RESTRICT"), nullable=False
+    )
+    case_id: Mapped[uuid.UUID | None] = mapped_column(
+        _uuid(), ForeignKey("cases.id", ondelete="RESTRICT")
     )
     channel: Mapped[str] = mapped_column(String(20), nullable=False)
+    interaction_mode: Mapped[str] = mapped_column(
+        String(20), nullable=False, server_default=text("'UNSELECTED'")
+    )
     status: Mapped[str] = mapped_column(String(20), nullable=False, server_default=text("'OPEN'"))
     started_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
@@ -213,14 +219,22 @@ class Interaction(Base):
     language: Mapped[str | None] = mapped_column(String(20))
     external_reference: Mapped[str | None] = mapped_column(String(255))
     channel_metadata: Mapped[dict[str, object] | None] = mapped_column(JSONB)
+    session_token_digest: Mapped[str | None] = mapped_column(String(64))
+    session_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    last_activity_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    session_policy_version: Mapped[str | None] = mapped_column(String(80))
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
 
     __table_args__ = (
         CheckConstraint(
-            "channel IN ('VOICE','TEXT','SILENT','IVR','CHATBOT','PORTAL','MOBILE')",
+            "channel IN ('WEB','PORTAL','IVR','TELEPHONY','CHATBOT','MOBILE','OPERATOR','SYSTEM')",
             name="interactions_channel",
+        ),
+        CheckConstraint(
+            "interaction_mode IN ('UNSELECTED','VOICE','TEXT','SILENT')",
+            name="interactions_interaction_mode",
         ),
         CheckConstraint(
             "status IN ('OPEN','COMPLETED','ABANDONED','FAILED')", name="interactions_status"
@@ -228,7 +242,30 @@ class Interaction(Base):
         CheckConstraint(
             "ended_at IS NULL OR ended_at >= started_at", name="interactions_time_range"
         ),
+        CheckConstraint(
+            "session_token_digest IS NULL OR (session_expires_at IS NOT NULL AND last_activity_at IS NOT NULL)",
+            name="interactions_session_timestamps",
+        ),
+        CheckConstraint(
+            "channel_metadata IS NULL OR validate_channel_metadata(channel_metadata)",
+            name="interactions_channel_metadata_allowlist",
+        ),
         Index("ix_interactions_case_started", "case_id", "started_at"),
+        Index("ix_interactions_subject_started", "subject_id", "started_at"),
+        Index("ix_interactions_active_expiry", "status", "session_expires_at"),
+        Index(
+            "uq_interactions_channel_external_reference",
+            "channel",
+            "external_reference",
+            unique=True,
+            postgresql_where=text("external_reference IS NOT NULL"),
+        ),
+        Index(
+            "uq_interactions_session_token_digest",
+            "session_token_digest",
+            unique=True,
+            postgresql_where=text("session_token_digest IS NOT NULL"),
+        ),
     )
 
 
@@ -250,6 +287,13 @@ class InteractionEvent(Base):
 
     __table_args__ = (
         Index("ix_interaction_events_interaction_time", "interaction_id", "occurred_at"),
+        Index(
+            "uq_interaction_events_interaction_source",
+            "interaction_id",
+            "source_reference",
+            unique=True,
+            postgresql_where=text("source_reference IS NOT NULL"),
+        ),
     )
 
 

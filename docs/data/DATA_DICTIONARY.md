@@ -47,10 +47,16 @@ No table contains a raw-audio URL/path/blob, voiceprint, credibility or lie scor
 
 ## Migration snapshot policy
 
-All seven historical revisions are immutable, self-contained Alembic snapshots. They use explicit `op.create_table`, index, constraint, trigger, and drop operations and do not import current ORM models or `Base.metadata`. Current SQLAlchemy metadata is used only for runtime drift detection; changing a model cannot rewrite historical schema history.
+All nine historical revisions are immutable, self-contained Alembic snapshots. They use explicit `op.create_table`, index, constraint, trigger, and drop operations and do not import current ORM models or `Base.metadata`. Current SQLAlchemy metadata is used only for runtime drift detection; changing a model cannot rewrite historical schema history.
 
 ## Packet 04 authorization tables
 
 The security migration adds `actors`, `actor_identities`, `roles`, `actor_role_bindings`, and `access_elevations`. Internal actor references use `actors.id`; external identity references remain explicitly named external-reference columns. `subject_contacts.contact_value` is an AES-256-GCM envelope, not a plaintext phone/email value.
 
 `processing_authority_types.authority_source_class` is intentionally independent from policy/configuration source taxonomies: its approved authority values are `STATUTORY`, `REGULATORY`, `CONSTITUTIONAL`, `EXECUTIVE_POLICY`, and `PRODUCT_POLICY`.
+
+## Packet 06 channel and consent additions
+
+`interactions.subject_id` is mandatory even before `case_id` exists. `interactions.channel` uses the canonical channel vocabulary; `interaction_mode` is separately `UNSELECTED`, `VOICE`, `TEXT`, or `SILENT`. Anonymous session credentials are represented only by `session_token_digest`, `session_expires_at`, `last_activity_at`, and `session_policy_version`. `channel_metadata` is a database-validated allowlist, not a provider payload sink.
+
+`consent_events.interaction_id`, `action_id`, `served_locale`, and `translation_status` bind a purpose decision to the interaction and truthfully identify fallback language. `processing_authorizations.status` and `revoked_at` make active authorization state explicit. No new table is introduced; the schema remains within the 41-table budget.

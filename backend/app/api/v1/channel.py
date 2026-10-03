@@ -1,0 +1,117 @@
+"""Canonical public channel gateway endpoints."""
+
+from __future__ import annotations
+
+import uuid
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, Header, status
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.channel.registry import all_channel_capabilities
+from app.channel.schemas import (
+    ChannelCapabilityResponse,
+    ChannelSessionCreate,
+    ChannelSessionResponse,
+    ConsentDecisionRequest,
+    ConsentReceipt,
+    ModeSelectionRequest,
+    SessionControlResponse,
+    SessionPolicyResponse,
+    SessionStateResponse,
+)
+from app.channel.session import channel_session_service
+from app.database import get_db_session
+from app.privacy.consent_engine import consent_engine
+
+router = APIRouter(prefix="/channel", tags=["Channel Gateway"])
+DbSession = Annotated[AsyncSession, Depends(get_db_session)]
+SessionToken = Annotated[str | None, Header(alias="X-Channel-Session-Token")]
+
+
+@router.get("/capabilities", response_model=tuple[ChannelCapabilityResponse, ...])
+async def capabilities() -> tuple[ChannelCapabilityResponse, ...]:
+    return tuple(
+        ChannelCapabilityResponse(
+            channel=item.channel,
+            status=item.status,
+            supported_modes=item.supported_modes,
+            provider_code=item.provider_code,
+            public_entrypoint=item.public_entrypoint,
+            human_review_required=item.human_review_required,
+            note=item.note,
+        )
+        for item in all_channel_capabilities()
+    )
+
+
+@router.post(
+    "/sessions",
+    response_model=ChannelSessionResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_session(request: ChannelSessionCreate, db: DbSession) -> ChannelSessionResponse:
+    response = await channel_session_service.create(db, request)
+    await db.commit()
+    return response
+
+
+@router.get("/sessions/{session_id}", response_model=SessionStateResponse)
+async def get_session(
+    session_id: uuid.UUID, db: DbSession, token: SessionToken
+) -> SessionStateResponse:
+    return await channel_session_service.state(db, session_id, token or "")
+
+
+@router.get("/sessions/{session_id}/policy", response_model=SessionPolicyResponse)
+async def get_policy(
+    session_id: uuid.UUID, db: DbSession, token: SessionToken
+) -> SessionPolicyResponse:
+    interaction = await channel_session_service.authenticate(
+        db, session_id, token or "", mutate=False
+    )
+    response = await consent_engine.present_policy(db, interaction)
+    await db.commit()
+    return response
+
+
+@router.post("/sessions/{session_id}/consents", response_model=ConsentReceipt)
+async def record_consent(
+    session_id: uuid.UUID,
+    request: ConsentDecisionRequest,
+    db: DbSession,
+    token: SessionToken,
+) -> ConsentReceipt:
+    receipt = await consent_engine.record(db, session_id, token or "", request)
+    await db.commit()
+    return receipt
+
+
+@router.post("/sessions/{session_id}/mode", response_model=SessionControlResponse)
+async def select_mode(
+    session_id: uuid.UUID,
+    request: ModeSelectionRequest,
+    db: DbSession,
+    token: SessionToken,
+) -> SessionControlResponse:
+    response = await channel_session_service.select_mode(db, session_id, token or "", request)
+    await db.commit()
+    return response
+
+
+@router.post("/sessions/{session_id}/complete", response_model=SessionControlResponse)
+async def complete_session(
+    session_id: uuid.UUID, db: DbSession, token: SessionToken
+) -> SessionControlResponse:
+    response = await channel_session_service.close(db, session_id, token or "", "COMPLETED")
+    await db.commit()
+    return response
+
+
+@router.post("/sessions/{session_id}/abandon", response_model=SessionControlResponse)
+async def abandon_session(
+    session_id: uuid.UUID, db: DbSession, token: SessionToken
+) -> SessionControlResponse:
+    response = await channel_session_service.close(db, session_id, token or "", "ABANDONED")
+    await db.commit()
+    return response

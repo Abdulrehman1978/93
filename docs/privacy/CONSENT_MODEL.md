@@ -137,3 +137,7 @@ interface ConsentRecord {
 ```
 
 *Prohibited from Default Consent Ledger:* IP addresses, device IMEI/MAC identifiers, telephony cell tower IDs, and browser fingerprinting hashes are **strictly prohibited** from the consent ledger. Network metadata is retained exclusively in segregated, time-bounded WAF/security logs under CERT-In statutory compliance rules (`PURP-17`).
+
+## 7. Packet 06 Gateway Enforcement
+
+Packet 06 operationalizes this model through an interaction-scoped, append-only ledger. A consent decision is accepted only after the applicable notice is presented under the current policy version. The server derives the purpose, subject, channel, policy row, and processing authorization; a client cannot submit a lawful basis or actor identity. `GRANTED`, `DECLINED`, and `REVOKED` are distinct ledger events, and revocation closes active consent authorizations without rewriting history. Emergency processing is unavailable to anonymous sessions and requires an authenticated human supervisor.

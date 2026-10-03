@@ -71,6 +71,14 @@ class Settings(BaseSettings):
     LOG_LEVEL: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
     PII_MASKING_ENABLED: bool = True
 
+    # Anonymous channel-session security policy. Raw session tokens are never
+    # persisted; only their SHA-256 digests are stored in PostgreSQL.
+    SESSION_POLICY_VERSION: str = "packet-06-internal-v1"
+    SESSION_TTL_SECONDS: int = 1800
+    SESSION_IDLE_TIMEOUT_SECONDS: int = 900
+    SESSION_ABSOLUTE_MAX_SECONDS: int = 3600
+    PUBLIC_SESSION_HEADER: str = "X-Channel-Session-Token"
+
     # Policy Baselines (Provisional Triage Policy; clinical finality requires formal validation)
     SVI_POLICY_STATUS: str = "PROVISIONAL_TRIAGE_POLICY"
     FOLLOW_UP_POLICY_VERSION: str = "v1.0-provisional"

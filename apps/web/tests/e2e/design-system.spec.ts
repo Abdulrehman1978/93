@@ -80,6 +80,20 @@ test.describe("Civic Calm design-system verification", () => {
     await expect(search).not.toHaveAttribute("aria-activedescendant");
   });
 
+  test("language options remain virtualized from the Tab order", async ({
+    page,
+  }) => {
+    await page.goto("/design-system");
+    const search = page.getByRole("combobox", { name: "Language" });
+    const options = page.locator('.language-selector [role="option"]');
+    await expect(options.first()).toHaveAttribute("tabindex", "-1");
+    await search.focus();
+    await page.keyboard.press("ArrowDown");
+    await expect(search).toBeFocused();
+    await page.keyboard.press("Tab");
+    await expect(page.locator('[role="option"]:focus')).toHaveCount(0);
+  });
+
   test("320px viewport has no body overflow and keeps controls reachable", async ({
     page,
   }) => {

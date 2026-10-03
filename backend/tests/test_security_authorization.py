@@ -122,7 +122,9 @@ async def _security_fixture(connection: AsyncConnection) -> dict[str, uuid.UUID]
     )
     interaction_id = await _id(
         connection,
-        "INSERT INTO interactions (case_id, channel) VALUES (:case_id, 'TEXT') RETURNING id",
+        "INSERT INTO interactions (subject_id, case_id, channel, interaction_mode) "
+        "VALUES (:subject_id, :case_id, 'WEB', 'TEXT') RETURNING id",
+        subject_id=subject_id,
         case_id=case_id,
     )
     transcript_id = await _id(

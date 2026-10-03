@@ -64,6 +64,15 @@
 | `REQ-20.1` | `REQ-20` | Circuit breaker & fallback to offline deterministic safety | `DegradedModeManager` | `app.core.resilience` | Degraded Status Banner | `test_offline_circuit_breaker` | Scenario H | `IN_PROGRESS` | System remains fully functional during external LLM cloud outage. |
 | `REQ-20.2` | `REQ-20` | Canonical PostgreSQL database foundation (Budget: 32–40 tables) | `PostgreSQLDatabaseManager` | `app.db` | DB Health Telemetry (`/health/db`) | `test_canonical_postgres_connection` | CI / Foundation | `IN_PROGRESS` | PostgreSQL 16+ is canonical; strict upper budget $\le 45$ tables. |
 
+## Packet 06 traceability addendum
+
+| Requirement | Implemented boundary | Evidence | Status |
+| --- | --- | --- | --- |
+| Canonical channel gateway | `/api/v1/channel/*`, canonical registry, provider-neutral adapter contract | `backend/app/channel/`, `docs/channel/CHANNEL_GATEWAY.md` | Implemented; external adapters not configured |
+| Anonymous session security | Digest-only session token, idle/absolute expiry, safe invalid-session response | `backend/app/channel/session.py`, `docs/channel/SESSION_POLICY.md` | Implemented |
+| Purpose-limited consent | Notice-before-decision, stale policy, append-only revocation, action idempotency | `backend/app/privacy/consent_engine.py`, `docs/privacy/CONSENT_ENGINE.md` | Implemented |
+| Pre-case interaction | Subject-bound interaction with nullable case and validated internal binding | migration `0009_channel_gateway_consent`, schema invariants | Implemented |
+
 ---
 
 ## 2. SIH26093 Problem Statement Itemized Coverage Gate (35 Mandatory Terms)
@@ -107,4 +116,3 @@ The table below provides granular proof that all 35 explicit terms from the SIH2
 | **33**| **Victim-Centric Redressal** | Civic Calm UX, trauma-informed copy, and non-coercive choices | `docs/product/TRAUMA_INFORMED_UX.md` | **Packet 05, 07**| Complainant User Journey Evaluation |
 | **34**| **Resource Allocation** | Objective matching criteria & district-level resource gap maps | `docs/product/RESOURCE_ROUTING_POLICY.md`| **Packet 14, 22**| District Resource Deficit Dashboard |
 | **35**| **Responsiveness** | Automated SLA tracking, timeout escalations, and verified follow-up | `docs/product/REFERRAL_STATE_MACHINE.md`| **Packet 15** | Referral SLA Escalation Monitor Test |
-

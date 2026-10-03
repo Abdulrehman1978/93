@@ -147,6 +147,7 @@ export function LanguageSelector({
               type="button"
               role="option"
               id={`${listId}-option-${language.code}`}
+              tabIndex={-1}
               aria-selected={selected === language.code}
               className={cn(index === safeActiveIndex && "is-active")}
               onClick={() => choose(language)}

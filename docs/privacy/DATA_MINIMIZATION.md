@@ -77,4 +77,8 @@ graph TD
    - *Authoritative Retention Duration:* The platform does **not** fabricate arbitrary retention periods. Duration is governed by:
      - Departmental call recording schedules (`RETENTION_POLICY_PENDING`).
      - Specific judicial preservation orders issued by a competent Special Court.
-     - Unrequisitioned recordings are deleted upon closure of administrative review.
+   - Unrequisitioned recordings are deleted upon closure of administrative review.
+
+## 4. Packet 06 Session Metadata Boundary
+
+The channel gateway stores a pseudonymized subject, canonical channel/mode, locale, lifecycle timestamps, a digest-only session credential, and a small allowlisted metadata object. It rejects raw narrative, audio, provider payloads, device fingerprints, and client-supplied lawful-basis or actor fields. Session tokens are returned once and are not recoverable from PostgreSQL.

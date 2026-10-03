@@ -23,3 +23,14 @@
 Historical migration revisions are immutable snapshots. A static test rejects ORM/model imports and metadata-table creation from `backend/alembic/versions`; the replay gate proves `upgrade head -> downgrade base -> upgrade head -> alembic check` on PostgreSQL 16.15.
 
 Transactional boundaries are: case + first interaction; assessment + evidence + model run; review + assessment state change; referral + first event; and consent event + authorization update. These operations belong in one application transaction when implemented.
+
+## Packet 06 invariants
+
+| Invariant | Database enforcement | Test/evidence |
+| --- | --- | --- |
+| Pre-case interaction has authoritative subject | `interactions.subject_id NOT NULL`; nullable `case_id`; RESTRICT subject FK | migration backfill and Packet 06 integration test |
+| Session credential is non-reversible at rest | SHA-256 digest column, unique partial index, expiry/idle fields | token-digest test and session policy |
+| Channel metadata is bounded | `validate_channel_metadata(jsonb)` check function | migration and metadata adversarial test |
+| Interaction event history is append-only | update/delete trigger plus source-reference idempotency index | append-only integration test |
+| Consent is interaction-scoped and idempotent | interaction/action unique partial index; append-only consent trigger | Packet 06 grant/revoke/idempotency test |
+| Emergency processing needs a human | service rejects anonymous/system/AI authority; supervisor role and allowed authority required | processing authorization service |

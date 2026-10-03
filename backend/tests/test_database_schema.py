@@ -73,9 +73,10 @@ async def _case_and_interaction(connection: AsyncConnection) -> tuple[str, str]:
     interaction_id = (
         await connection.execute(
             text(
-                "INSERT INTO interactions (case_id, channel) VALUES (:case_id, 'TEXT') RETURNING id"
+                "INSERT INTO interactions (subject_id, case_id, channel, interaction_mode) "
+                "VALUES (:subject_id, :case_id, 'WEB', 'TEXT') RETURNING id"
             ),
-            {"case_id": case_id},
+            {"subject_id": subject_id, "case_id": case_id},
         )
     ).scalar_one()
     return str(case_id), str(interaction_id)

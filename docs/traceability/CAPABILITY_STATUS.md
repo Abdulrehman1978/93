@@ -33,6 +33,7 @@
 | **Canonical PostgreSQL Container** | `FOUNDATION_CONTAINER_READY` | Pinned `postgres:16.15-alpine` running on port 5493. Domain tables and Alembic migrations scheduled for Packet 03. | `docker-compose.yml`; verified healthy in clean CI. |
 | **MinIO Object Storage Container** | `FOUNDATION_CONTAINER_READY` | Pinned release tag `quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z` on port 9093 with non-blocking readiness. | `docker-compose.yml`; verified healthy in clean CI. |
 | **Identity, Authorization & Privacy Foundation** | `FOUNDATION_READY` | Provider-neutral OIDC boundary, deny-by-default RBAC/ABAC PDP/PEP, object-level scope, purpose gates, field encryption, audit decisions, and minimum-field projections. Concrete IdP/key custody and RLS remain deployment/Packet 27 gates. | `docs/security/`; `backend/app/security/`; `docs/results/04-result.md`. |
+| **Canonical Channel Gateway & Consent Engine** | `FOUNDATION_READY` | First-party `WEB` session entrypoint, explicit non-live adapter truth, digest-only anonymous sessions, pre-case interactions, notice/consent ledger, and server-derived processing authorization. | `docs/channel/`; `docs/privacy/CONSENT_ENGINE.md`; `docs/results/06-result.md`. |
 
 ---
 

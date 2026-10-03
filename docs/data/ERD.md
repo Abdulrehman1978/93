@@ -112,3 +112,17 @@ erDiagram
 ```
 
 Internal actor references use `actors.id`; external references are retained only in explicitly named `external_*_reference` columns.
+
+## Packet 06 pre-case interaction boundary
+
+```mermaid
+erDiagram
+    SUBJECTS ||--o{ INTERACTIONS : starts
+    CASES o|--o{ INTERACTIONS : binds
+    INTERACTIONS ||--o{ INTERACTION_EVENTS : records
+    INTERACTIONS ||--o{ CONSENT_EVENTS : scopes
+    INTERACTIONS ||--o{ PROCESSING_AUTHORIZATIONS : authorizes
+    CONSENT_EVENTS ||--o{ PROCESSING_AUTHORIZATIONS : proves
+```
+
+An interaction may exist without a case, but it can never exist without a subject. Case binding is a later, validated association and does not rewrite interaction or consent history.
