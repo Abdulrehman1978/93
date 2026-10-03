@@ -2,7 +2,7 @@
 
 > **Document ID:** ASSUMPTION-REGISTER-V2  
 > **Topic:** Master Register of Legal, Technical, Operational, and Socio-Cultural Assumptions  
-> **Last Updated:** October 2026
+> **Last Updated:** 2026-10-03 (Updated for Packet 02 Product Specification)  
 
 ---
 
@@ -20,3 +20,6 @@
 | `ASM-08` | **Offline / Degraded Realities** | District-level helpline call centers or mobile operators in rural areas frequently experience cloud or fiber internet disruptions. | Indian public sector tier-2/tier-3 infrastructure realities. | Complete system lockout during network downtime if reliant entirely on cloud LLMs. | Hybrid architecture: Local ASR baseline, local PostgreSQL instance, and deterministic regex safety rules run 100% offline without internet. |
 | `ASM-09` | **Canonical PostgreSQL** | PostgreSQL 16+ is the authoritative, canonical database for development integration, migrations, database testing, E2E, CI, staging, and production. SQLite is not a production alternative. | Ensuring production ACID guarantees, check constraints, JSONB operators, and concurrency isolation (SKIP LOCKED). | Schema or constraint drift if SQLite quirks diverge from PostgreSQL. | All database validations, integration tests, and migrations run against canonical PostgreSQL. SQLite restricted solely to deliberately DB-agnostic unit tests. |
 | `ASM-10` | **ASR Baseline Candidate** | `faster-whisper-turbo` (CTranslate2 INT8) is the initial baseline candidate for local development, not a finalized production selection or guaranteed sub-second engine. | Proven local CPU inference capability for initial scaffolding. | Potential accuracy or latency deficits on regional dialects and noisy telephone audio. | Mandatory Packet 08 benchmarking against Indic-focused/government alternatives across WER, latency, and critical-phrase recall before production lock. |
+| `ASM-11` | **Non-Diagnostic System Role** | SAMBAL is an administrative and triage support layer, NOT a clinical psychiatric or judicial diagnostic instrument. | Medical licensing laws and statutory criminal procedure mandates. | Misguided clinical labeling of victims or improper legal guilt determinations. | System explicitly bans psychiatric diagnoses and legal guilt determinations across contracts and documentation. |
+| `ASM-12` | **Provisional SVI Formulation** | SVI represents a qualitative triage construct; no finalized mathematical formula or static weights exist prior to Packet 11 empirical evaluation. | Responsible AI and avoiding premature algorithmic lock-in. | Encoding biased or unverified weights into early database schemas. | SVI defined strictly conceptually in Packet 02; mathematical fusion deferred to Packet 11. |
+| `ASM-13` | **Verified Support Mandate** | Recommending or transmitting a referral does not equate to delivered support; dual confirmation from provider and citizen is required. | Real-world attrition where referrals are lost in bureaucratic handoffs. | Misleading leadership with vanity metrics of "successful referrals". | 15-state referral state machine and 7-tier Verified Support hierarchy implemented. |

@@ -2,35 +2,39 @@
 
 > **Document ID:** CAPABILITY-STATUS-REGISTER-V2  
 > **Standard:** Absolute transparency on runtime status. Zero fabricated integrations, zero fake "live" badges.  
-> **Allowed States:** `LIVE` | `SANDBOX` | `ADAPTER_READY` | `RESEARCH_ONLY`
+> **Allowed States:** `FOUNDATION_READY` | `BASELINE_CANDIDATE` | `SPECIFIED` | `PROVISIONAL_TRIAGE_POLICY` | `ADAPTER_READY` | `SANDBOX` | `RESEARCH_ONLY` | `NOT_STARTED`  
 
 ---
 
-## 1. Capability Status Matrix
+## 1. Capability Status Matrix (Post-Packet 02 Review)
 
 | Capability / Module | Runtime Truth State | Operational Description & Execution Boundary | Evidence Artifact / Provider |
 | :--- | :--- | :--- | :--- |
-| **Local Indic ASR (Speech-to-Text)** | `BASELINE_CANDIDATE` | Initial local implementation candidate using CTranslate2 INT8 `faster-whisper-turbo`. Final selection subject to Packet 08 benchmarking against Indic-focused/government alternatives. | `faster-whisper` local model weights; benchmark suite in Packet 08. |
-| **DSP Acoustic Feature Extraction** | `LIVE` | Mathematical DSP extraction of F0 (pyin), energy (RMS), pause statistics, and speech rate using librosa and WebRTC VAD. | `app/intelligence/speech.py`; unit tests in `tests/test_speech_analytics.py`. |
-| **Deterministic Safety Gate** | `LIVE` | Multilingual regex and statutory lexicon rule engine detecting imminent self-harm, active violence, weapons, and coercion. | `app/safety/rules.py`; unit tests in `tests/test_safety_gate.py`. |
-| **Semantic NLP Threat Classifier** | `LIVE` | Multilingual transformer-based semantic classification for threat extraction, negation disambiguation, and reported speech. | `app/intelligence/text.py`; unit tests in `tests/test_text_safety.py`. |
-| **Multimodal Evidence Fusion & SVI** | `LIVE` | Mathematically bounded weighted fusion engine calculating SVI (0–100, `PROVISIONAL_TRIAGE_POLICY`), risk bands, and counterfactual contributions. | `app/intelligence/svi.py`; unit tests in `tests/test_svi_fusion.py`. |
-| **Canonical PostgreSQL Database** | `LIVE` | Authoritative relational database for all environments (dev, test, CI, prod). Schema designed within 32–40 core tables budget (upper limit $\le 45$). | PostgreSQL 16+ instance; Alembic migrations in `alembic/`. |
-| **Closed-Loop Referral State Machine** | `LIVE` | Full relational state machine tracking referral lifecycle (Recommended → Acknowledged → Contacted → Service Started → Follow-up). | `app/referral/lifecycle.py`; unit tests in `tests/test_referrals.py`. |
-| **Citizen Intake (Speak / Write / Silent)** | `LIVE` | Responsive PWA interface providing 3 distinct intake modalities, audio recording, real-time draft saving, and Quick Exit. | Next.js frontend routes `/intake/*`; E2E tests in `tests/e2e/intake.spec.ts`. |
-| **Operator Live Response Copilot** | `LIVE` | Real-time WebSocket-synchronized dashboard displaying live transcript, evidence pins, SVI dial, and suggested questions. | `/operator/live/[sessionId]`; Playwright tests in `tests/e2e/copilot.spec.ts`. |
-| **Evidence Timeline & Inspector** | `LIVE` | Synchronized audio waveform, transcript timeline, and drill-down Evidence Inspector revealing exact provenance and confidence. | `/operator/live` inspector drawer; tests in `tests/e2e/evidence.spec.ts`. |
-| **Tele-MANAS Handoff Adapter** | `SANDBOX` | Production-grade simulation of the MoHFW Tele-MANAS (14416) referral intake webhook. Validates HMAC signatures and returns simulated case IDs. | `app/integrations/telemanas.py`; sandbox tests in `tests/test_telemanas_sandbox.py`. |
-| **NALSA / DLSA Legal Aid Adapter** | `SANDBOX` | Production-grade simulation of District Legal Services Authority front-office referral docket transmission with bi-directional callback. | `app/integrations/nalsa.py`; sandbox tests in `tests/test_nalsa_sandbox.py`. |
-| **ERSS 112 Emergency Dispatch** | `SANDBOX` | High-priority emergency payload simulator with mandatory human operator authorization gate. Autonomous dispatch strictly prohibited. | `app/integrations/erss112.py`; sandbox tests in `tests/test_erss_sandbox.py`. |
-| **SAMBAL / NHAA Docket Sync Adapter** | `ADAPTER_READY` | Canonical API client implementing MoSJE grievance docket synchronization contracts. Complete OpenAPI specification awaiting production VPN credentials. | `app/integrations/sambal_adapter.py`; contract tests in `tests/test_sambal_adapter.py`. |
-| **BHASHINI MeitY Cloud ASR** | `ADAPTER_READY` | Enterprise adapter configured for Digital India Bhashini Division API v2. Awaiting production API tokens; fallback to local candidate. | `app/speech/bhashini_adapter.py`; mock contract tests in `tests/test_bhashini_adapter.py`. |
-| **Affective Distress Classifier** | `RESEARCH_ONLY` | Experimental prosodic emotion classification model fine-tuned on public speech datasets. Bounded to supporting signal role (max ±15 pts SVI). | `app/intelligence/affective.py`; documented in `docs/ai/AFFECTIVE_SIGNAL_ENGINE.md`. |
-| **Offline Degraded Mode Fallback** | `LIVE` | System resilience manager automatically dropping external LLM dependencies during network outages while maintaining intake and safety rules. | `app/core/resilience.py`; failure injection tests in `tests/test_degraded_mode.py`. |
+| **Monorepo Foundation & Quality Gates** | `FOUNDATION_READY` | Node 24, Next.js 16 Active-LTS, Python 3.12, uv 0.12.17, Ruff, Mypy, Vitest, Playwright, Axe, Gitleaks, pip-audit, npm audit. | Verified on GitHub Actions Runs `37096095377` and `37096375263`. |
+| **Local Indic ASR (Speech-to-Text)** | `BASELINE_CANDIDATE` | Initial local implementation candidate using CTranslate2 INT8 `faster-whisper-turbo`. Final selection subject to Packet 08 benchmarking against Indic-focused/government alternatives. | `backend/app/intelligence/contracts.py` (ASRProvider); benchmark suite in Packet 08. |
+| **Three-Dimensional Assessment Model** | `SPECIFIED` | Formal separation of Immediate Safety, SVI, and Reported Incident Urgency with qualitative evidence precedence rules. | `docs/product/ASSESSMENT_MODEL.md`; `packages/contracts/src/index.ts`. |
+| **Immediate Safety State Machine** | `SPECIFIED` | 5 authoritative states (`NO_IMMEDIATE_SIGNAL`, `REVIEW_RECOMMENDED`, `ELEVATED`, `CRITICAL_REVIEW`, `INSUFFICIENT_INFORMATION`). | `docs/product/IMMEDIATE_SAFETY_POLICY.md`; `packages/contracts/src/index.ts`. |
+| **Self-Harm & Suicide Safety Protocol** | `SPECIFIED` | Non-diagnostic principle, 7-part context semantics taxonomy, and mandatory human crisis de-escalation workflow. | `docs/product/SELF_HARM_SAFETY_POLICY.md`; `docs/ai/GOLDEN_SAFETY_CORPUS.md`. |
+| **Reported Incident Urgency Model** | `SPECIFIED` | 4 objective urgency levels (`ROUTINE`, `PRIORITY`, `URGENT`, `CRITICAL`), completely decoupled from emotional presentation. | `docs/product/REPORTED_INCIDENT_URGENCY.md`. |
+| **Stress Vulnerability Index (SVI)** | `PROVISIONAL_TRIAGE_POLICY` | Conceptual triage bands (`LOW`, `MODERATE`, `HIGH`, `CRITICAL`). Mathematical fusion formula is explicitly unencoded in Packet 02 and deferred to Packet 11. | `docs/ai/SVI_POLICY.md`; `packages/contracts/src/index.ts`. |
+| **Affective Distress / Acoustic Signals** | `RESEARCH_ONLY` | Designated strictly as `SUPPORTING_SIGNAL_ONLY`. Legally forbidden from determining urgency or causing emergency dispatch. | `docs/ai/AFFECTIVE_SIGNAL_POLICY.md`. |
+| **Consequential Action & Override Model** | `SPECIFIED` | Authority matrix (Suggest vs Prepare vs Approve vs Forbidden) and 8 non-destructive operator override actions. | `docs/product/HUMAN_OVERSIGHT.md`. |
+| **Support Service Taxonomy (12 Pathways)**| `SPECIFIED` | Covers all SIH26093 expected recommendation pathways and official statutory relief mechanisms under PoA Act. | `docs/product/SERVICE_TAXONOMY.md`; `packages/contracts/src/index.ts`. |
+| **Closed-Loop Referral State Machine** | `SPECIFIED` | 15-state lifecycle and 7-tier Verified Support Hierarchy answering "Did support actually arrive?". | `docs/product/REFERRAL_STATE_MACHINE.md`. |
+| **Safe Handoff & Never-Repeat-My-Story**| `SPECIFIED` | Role-based data minimization per agency (Counsellor, Legal, Medical, ERSS) and multi-layer memory architecture. | `docs/product/SAFE_HANDOFF.md`. |
+| **DPDP Granular Consent Model** | `SPECIFIED` | 7 unbundled purpose-specific consent dimensions; research and raw audio retention strictly optional. | `docs/privacy/CONSENT_MODEL.md`. |
+| **Raw Audio Ephemeral Streaming Policy** | `SPECIFIED` | In-memory ephemeral processing; zero default disk persistence; AES-256-GCM encryption if consented. | `docs/privacy/DATA_MINIMIZATION.md`. |
+| **Trauma-Informed UX & Civic Calm** | `SPECIFIED` | 5 trauma-informed pillars, calming visual tokens, persistent Quick Exit, and discreet Silent Distress mode. | `docs/product/TRAUMA_INFORMED_UX.md`; `docs/product/CONTENT_GUIDE.md`. |
+| **Tele-MANAS Handoff Adapter (14416)** | `ADAPTER_READY` | National mental health baseline verified (20 languages, 53 cells); adapter contract established for Packet 19. | `docs/SOURCE_REGISTRY.md`; `docs/product/SERVICE_TAXONOMY.md`. |
+| **NALSA / DLSA Legal Aid Adapter (15100)**| `ADAPTER_READY` | Statutory baseline verified under LSA Act Sec 12(b); adapter contract established for Packet 19. | `docs/SOURCE_REGISTRY.md`; `docs/product/SERVICE_TAXONOMY.md`. |
+| **ERSS 112 Emergency Handoff Adapter** | `ADAPTER_READY` | Human-authorized emergency dispatch protocol established; adapter contract established for Packet 19. | `docs/SOURCE_REGISTRY.md`; `docs/product/SERVICE_TAXONOMY.md`. |
+| **SAMBAL / NHAA Canonical Adapter** | `ADAPTER_READY` | Baseline verified against MoSJE NHAA (14566) specifications; adapter contract established for Packet 19. | `docs/SOURCE_REGISTRY.md`; `docs/research/SAMBAL_NHAA_CURRENT_STATE.md`. |
+| **Bhashini MeitY Cloud ASR** | `ADAPTER_READY` | Cloud ASR fallback candidate for Packet 08 benchmarking. | `backend/app/intelligence/contracts.py`. |
+| **Canonical PostgreSQL Container** | `FOUNDATION_CONTAINER_READY` | Pinned `postgres:16.15-alpine` running on port 5493. Domain tables and Alembic migrations scheduled for Packet 03. | `docker-compose.yml`; verified healthy in clean CI. |
+| **MinIO Object Storage Container** | `FOUNDATION_CONTAINER_READY` | Pinned release tag `quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z` on port 9093 with non-blocking readiness. | `docker-compose.yml`; verified healthy in clean CI. |
 
 ---
 
 ## 2. Transition Gate Requirements
-- **To move from `SANDBOX` to `LIVE`:** Requires verified production credentials, signed inter-ministerial data sharing agreement, and end-to-end integration test against staging environment.
-- **To move from `ADAPTER_READY` to `LIVE`:** Requires NIC/MoSJE API endpoint access, mTLS certificate exchange, and security compliance audit.
-- **To move from `RESEARCH_ONLY` to `LIVE`:** Requires formal clinical validation study with institutional review board (IRB) ethics approval and domain publication.
+- **To move from `SPECIFIED` to `LIVE` / `IMPLEMENTED`:** Requires completion of the corresponding downstream packet (Packet 03 for DB, Packet 04 for Auth, Packet 05/07 for Citizen UI, Packet 08 for Speech, Packet 09 for NLP, Packet 10 for Audio ML, Packet 11 for SVI Fusion, Packet 13 for Operator Copilot, Packet 15 for Referrals), with 100% passing automated unit, integration, and E2E tests.
+- **To move from `ADAPTER_READY` to `LIVE`:** Requires formal ministerial peering, production credentials, and signed data-sharing agreements.

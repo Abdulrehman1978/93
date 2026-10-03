@@ -33,7 +33,7 @@ Under **Packet 01R**, all 13 remediation requirements have been rigorously addre
 | **3** | **Real Dependency-Security Gates** | Security scan ran secret detection only, omitting package vulnerability gates. | Added separate CI security gates: `npm audit --omit=dev --audit-level=high` (0 production vulnerabilities) and `uv run --with pip-audit pip-audit` (0 vulnerabilities). | **RESOLVED** |
 | **4** | **Reproducible Python Lockfile** | `requirements-lock.txt` contained machine-specific `file:///C:/93/backend` and was ignored by CI. | Generated authoritative portable `backend/uv.lock` resolving 50 packages. CI and Docker now install strictly via `uv sync --frozen`. Exported clean portable hash-pinned requirements. | **RESOLVED** |
 | **5** | **Pin uv Consistently** | Inconsistent uv versions: local 0.12.17, Docker 0.4.15, CI "latest". | Pinned uv `0.12.17` across local baseline, GitHub Actions setup-uv, and `ghcr.io/astral-sh/uv:0.12.17` in Dockerfile. | **RESOLVED** |
-| **6** | **Pin Container Dependencies** | Floating tags: `quay.io/minio/minio:latest` and `postgres:16-alpine`. | Pinned immutable tags: `postgres:16.15-alpine` and `quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z` (digest `sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e`). | **RESOLVED** |
+| **6** | **Pin Container Dependencies** | Floating tags: `quay.io/minio/minio:latest` and `postgres:16-alpine`. | Pinned immutable tags: `postgres:16.15-alpine` and fixed release tag `quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z` (resolved digest `sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e` documented; Compose uses release tag). | **RESOLVED** |
 | **7** | **Object Storage Readiness Semantics** | Storage probe listed buckets without verifying configured bucket exists; synchronous boto3 network I/O blocked event loop. | Implemented `head_bucket` verification inside `asyncio.to_thread(_sync_check_storage)`. Added deterministic startup provisioning via `ensure_bucket_exists()` and dedicated `s3-init` container service. | **RESOLVED** |
 | **8** | **Remove Infrastructure Leakage** | `/health/ready` exposed raw `str(exc)` containing driver exceptions, hostnames, and credentials. | Masked all external health responses to generic strings (`"Database connection unavailable"`, `"Storage service unavailable"`). Added negative tests proving injected database credentials never appear in response. | **RESOLVED** |
 | **9** | **Correct Logging Security Claim** | Claimed "zero-leakage PII protection" while regexes only covered baseline patterns and bypassed nested structures / exception traces. | Updated documentation to truthful baseline regex claim. Implemented recursive dictionary/list sanitization, prohibited keys policy (`transcript`, `citizen_narrative`, `identity_document`, etc.), and stack trace credential masking. Added negative tests. | **RESOLVED** |
@@ -67,7 +67,7 @@ Under **Packet 01R**, all 13 remediation requirements have been rigorously addre
 | **Mypy** | `2.4.0` | Strict Python Type Checker | `uv run mypy --version` |
 | **Pytest** | `9.1.1` | Python Test Harness | `uv run pytest --version` |
 | **PostgreSQL Image** | `postgres:16.15-alpine` | Canonical Relational Database | `docker inspect sambal-db` |
-| **MinIO Image** | `quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z` | S3-Compatible Object Storage | `docker inspect sambal-s3` |
+| **MinIO Image** | `quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z` | S3-Compatible Object Storage (fixed release tag; resolved digest documented) | `docker inspect sambal-s3` |
 
 ---
 
@@ -293,6 +293,8 @@ With the repository foundation remediated, locked, container-verified, and prove
 
 - **Authoritative Repository:** `Abdulrehman1978/93`
 - **Tracked Branch:** `main`
-- **Final Remediation Commit SHA:** `2fc096652bfd4fc4205ba90df455c1e5730248ad`
-- **GitHub Actions CI Run:** `37096095377` (All 3 jobs SUCCESS)
+- **Actual Remediation Commit SHA:** `2fc0966bf0e91627eaec5994d62dde5fdec9044f`
+  - GitHub Actions Run: `37096095377` — **SUCCESS** (Run URL: [https://github.com/Abdulrehman1978/93/actions/runs/37096095377](https://github.com/Abdulrehman1978/93/actions/runs/37096095377))
+- **Final Closure & Documentation Commit SHA:** `830ac2ff27f9c62ac9fc437e4f86c9975602d1dc`
+  - GitHub Actions Run: `37096375263` — **SUCCESS** (Run URL: [https://github.com/Abdulrehman1978/93/actions/runs/37096375263](https://github.com/Abdulrehman1978/93/actions/runs/37096375263))
 - **Remediation Acceptance Decision:** `PASS`

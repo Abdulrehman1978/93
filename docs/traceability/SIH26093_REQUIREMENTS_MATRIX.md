@@ -63,3 +63,48 @@
 | `REQ-19.3` | `REQ-19` | Human-authorized emergency dispatch boundary (`ERSS112Adapter`) | `EmergencyAuthorizationGate` | `app.integrations.erss` | Emergency Dispatch Modal | `test_emergency_dispatch_human_gate` | Security Audit | `IN_PROGRESS` | Autonomous dispatch strictly barred; requires human operator click. |
 | `REQ-20.1` | `REQ-20` | Circuit breaker & fallback to offline deterministic safety | `DegradedModeManager` | `app.core.resilience` | Degraded Status Banner | `test_offline_circuit_breaker` | Scenario H | `IN_PROGRESS` | System remains fully functional during external LLM cloud outage. |
 | `REQ-20.2` | `REQ-20` | Canonical PostgreSQL database foundation (Budget: 32–40 tables) | `PostgreSQLDatabaseManager` | `app.db` | DB Health Telemetry (`/health/db`) | `test_canonical_postgres_connection` | CI / Foundation | `IN_PROGRESS` | PostgreSQL 16+ is canonical; strict upper budget $\le 45$ tables. |
+
+---
+
+## 2. SIH26093 Problem Statement Itemized Coverage Gate (35 Mandatory Terms)
+
+The table below provides granular proof that all 35 explicit terms from the SIH26093 problem statement have documented product behavior, governance policies, implementation assignments, and verification scenarios:
+
+| # | Problem Statement Term | Product Concept | Policy Document Reference | Future Packet Assignment | Verification Test / Demo Scenario |
+| :-: | :--- | :--- | :--- | :---: | :--- |
+| **1** | **Voice Analysis** | Non-semantic acoustic feature extraction (F0, tremor, SNR) | `docs/ai/AFFECTIVE_SIGNAL_POLICY.md` | **Packet 10** | `tests/test_speech_analytics.py` (Scenario G) |
+| **2** | **Pauses** | Speech-pause architecture & hesitation ratio analysis | `docs/ai/AFFECTIVE_SIGNAL_POLICY.md` | **Packet 10** | `test_pause_hesitation_ratio` (Scenario A) |
+| **3** | **Pitch Variation** | Fundamental frequency (F0) perturbation & micro-tremor tracking | `docs/ai/AFFECTIVE_SIGNAL_POLICY.md` | **Packet 10** | `test_pitch_f0_pyin_tracking` (Scenario G) |
+| **4** | **Speech Patterns** | Syllable tempo, speech rate, and vocal intensity drop-off | `docs/ai/AFFECTIVE_SIGNAL_POLICY.md` | **Packet 10** | `test_speech_rate_extraction` (Scenario A) |
+| **5** | **Emotional Indicators** | Bounded prosodic distress cues (`SUPPORTING_SIGNAL_ONLY`) | `docs/ai/AFFECTIVE_SIGNAL_POLICY.md` | **Packet 10** | `test_affective_signal_bounds` (Scenario A) |
+| **6** | **Text Narratives** | Multi-channel citizen typed / written narrative intake | `docs/product/JOURNEYS.md` (Journey 2) | **Packet 07** | `test_typed_narrative_intake` (Citizen Flow) |
+| **7** | **NLP** | Multilingual entity extraction, negation, and temporal parsing | `docs/ai/GOLDEN_SAFETY_CORPUS.md` | **Packet 09** | `test_text_safety.py` (Scenario F) |
+| **8** | **Speech Analytics** | DSP-based speech quality index and acoustic anomaly detection | `backend/app/intelligence/contracts.py` | **Packet 10** | `test_snr_audio_quality_flag` (Scenario G) |
+| **9** | **Emotion AI** | Operator empathy pacing telemetry (strictly non-diagnostic) | `docs/ai/AFFECTIVE_SIGNAL_POLICY.md` | **Packet 10** | Operator Copilot Inspector (Scenario A) |
+| **10**| **SVI (Stress Vulnerability Index)** | Multidimensional triage prioritization band (0–100 concept) | `docs/ai/SVI_POLICY.md` | **Packet 11** | `test_svi_mathematical_bounds` (Golden Lab) |
+| **11**| **Low / Moderate / High / Critical** | 4 standardized operational triage bands for review ordering | `docs/ai/SVI_POLICY.md` | **Packet 11** | `test_risk_band_partitions` (Scenarios A, B, E) |
+| **12**| **Severe Trauma Indicators** | Compound trauma recall, panic symptoms, and grief detection | `docs/product/ASSESSMENT_MODEL.md` | **Packet 09, 11**| `test_trauma_distress_extraction` (Golden B) |
+| **13**| **Fear** | Acoustic tremor combined with explicit threat narrative | `docs/product/ASSESSMENT_MODEL.md` | **Packet 09, 10**| Scenario D (Witness Intimidation) |
+| **14**| **Depression-Associated Indicators** | Passive hopelessness, existential despair, sleep/energy complaints | `docs/product/SELF_HARM_SAFETY_POLICY.md` | **Packet 09** | `test_passive_hopelessness` (Category 2) |
+| **15**| **Suicidal Ideation** | 7-part context semantics taxonomy with zero-tolerance recall | `docs/product/SELF_HARM_SAFETY_POLICY.md` | **Packet 09** | `test_golden_self_harm_recall` (Scenario B, C) |
+| **16**| **Intimidation** | Coercion, stalking, witness pressure, and threats of violence | `docs/product/REPORTED_INCIDENT_URGENCY.md`| **Packet 09** | Scenario D (Accused Death Threats) |
+| **17**| **Social Isolation** | Community boycotts, water/electricity denial, movement barriers | `docs/product/REPORTED_INCIDENT_URGENCY.md`| **Packet 09** | Scenario A (Colony Siege) |
+| **18**| **Extreme Vulnerability** | Compound physical, social, and psychological crisis (`CRITICAL`) | `docs/ai/SVI_POLICY.md` | **Packet 11** | Operator Queue Priority 1 (Scenario B) |
+| **19**| **Counselling** | Frontline psychosocial support & supportive listening | `docs/product/SERVICE_TAXONOMY.md` | **Packet 14, 15**| Tele-MANAS Tier-1 Matching (Scenario B) |
+| **20**| **Legal Aid** | Free legal representation under LSA Act 1987 Section 12(b) | `docs/product/SERVICE_TAXONOMY.md` | **Packet 14, 15**| NALSA 15100 Docket Dispatch (Scenario F) |
+| **21**| **Medical Support** | Medico-legal examination & emergency hospital treatment | `docs/product/SERVICE_TAXONOMY.md` | **Packet 14, 15**| Civil Hospital Emergency Referral |
+| **22**| **Police Intervention Review** | Authorized administrative review of protection & FIR registration| `docs/product/SERVICE_TAXONOMY.md` | **Packet 14, 15**| District SP / SC/ST Cell Notification |
+| **23**| **Witness Protection Review** | Threat assessment dossier for District Witness Protection Committee | `docs/product/SERVICE_TAXONOMY.md` | **Packet 14, 15**| Witness Protection Dossier Generator |
+| **24**| **Emergency Support** | Human-authorized emergency rescue coordination via ERSS 112 | `docs/product/SERVICE_TAXONOMY.md` | **Packet 14, 15**| ERSS 112 Multi-Agency Conference Call |
+| **25**| **Indian Languages** | Explicit 7-dimension language registry (English, Hindi, Marathi) | `docs/product/LANGUAGE_POLICY.md` | **Packet 08** | Multilingual ASR Benchmark Suite |
+| **26**| **Dialect / Code-Switch Uncertainty** | Hinglish/Maranglish token preservation & `LANGUAGE_UNCERTAIN` | `docs/product/LANGUAGE_POLICY.md` | **Packet 08, 09**| Golden Scenario F Test |
+| **27**| **Privacy** | DPDP Act 2023 compliance, purpose limitation & data minimization | `docs/privacy/DATA_MINIMIZATION.md` | **Packet 04** | PII Redaction Audit in Logs & Telemetry |
+| **28**| **Consent** | 7-part unbundled consent model; research consent fully optional | `docs/privacy/CONSENT_MODEL.md` | **Packet 06** | Consent Ledger Token Verification |
+| **29**| **Confidentiality** | Role-scoped Safe Handoff packets; zero unconsented data dumps | `docs/product/SAFE_HANDOFF.md` | **Packet 16** | Inter-Agency Data Sieve Audit |
+| **30**| **Ethical AI** | Prohibitions on guilt scoring, lie detection, and clinical diagnoses| `docs/product/ASSESSMENT_MODEL.md` | **Packet 26** | Algorithmic Fairness & Parity Audits |
+| **31**| **Early Identification** | Sub-3-second visual triage for incoming helpline interactions | `docs/product/JOURNEYS.md` (Journey 5) | **Packet 13** | Operator Triage Latency Benchmark |
+| **32**| **Prioritisation** | 3D queue sorting (Immediate Safety > Incident Urgency > SVI > Age) | `docs/product/ASSESSMENT_MODEL.md` | **Packet 13** | Priority Queue Sorting Unit Tests |
+| **33**| **Victim-Centric Redressal** | Civic Calm UX, trauma-informed copy, and non-coercive choices | `docs/product/TRAUMA_INFORMED_UX.md` | **Packet 05, 07**| Complainant User Journey Evaluation |
+| **34**| **Resource Allocation** | Objective matching criteria & district-level resource gap maps | `docs/product/RESOURCE_ROUTING_POLICY.md`| **Packet 14, 22**| District Resource Deficit Dashboard |
+| **35**| **Responsiveness** | Automated SLA tracking, timeout escalations, and verified follow-up | `docs/product/REFERRAL_STATE_MACHINE.md`| **Packet 15** | Referral SLA Escalation Monitor Test |
+

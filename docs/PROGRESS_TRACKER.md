@@ -15,7 +15,7 @@
 | **PKT-00** | **Research & Reality Audit** | **PASS** | Phase 0 — Foundation | Principal Architect / Research Lead | [`docs/results/00-result.md`](./results/00-result.md) |
 | **PKT-01** | Repository Foundation & Monorepo Toolchain | **PASS** (via 01R) | Phase 1 — Platform Core | DevSecOps / Staff Systems Engineer | [`docs/results/01-result.md`](./results/01-result.md) |
 | **PKT-01R** | **Repository Foundation Remediation & Clean-CI Closure** | **PASS** | Phase 1 — Platform Core | DevSecOps / Staff Systems Engineer | [`docs/results/01R-result.md`](./results/01R-result.md) |
-| **PKT-02** | Product, Safety & Service Specification | NOT_STARTED | Phase 1 — Platform Core | Principal Product Manager / Safety Advisor | `docs/results/02-result.md` |
+| **PKT-02** | **Product, Safety & Service Specification** | **PASS** | Phase 1 — Platform Core | Principal Product Manager / Safety Advisor | [`docs/results/02-result.md`](./results/02-result.md) |
 | **PKT-03** | Database Foundation & Domain Schema | NOT_STARTED | Phase 1 — Platform Core | Data Architect / Backend Lead | `docs/results/03-result.md` |
 | **PKT-04** | Authorization, RBAC & Privacy Foundation | NOT_STARTED | Phase 1 — Platform Core | Security Architect / Privacy Engineer | `docs/results/04-result.md` |
 | **PKT-05** | Civic Calm Design System & Primitives | NOT_STARTED | Phase 1 — Platform Core | Principal UX Designer / A11y Lead | `docs/results/05-result.md` |
