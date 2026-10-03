@@ -101,7 +101,7 @@ Packet 06 remains `NOT_STARTED`. No channel gateway, consent engine, database fe
 
 ## Repository evidence
 
-- Implementation commit: `PENDING_PUSH`
-- GitHub Actions run: `PENDING_PUSH`
+- Implementation commit: `61b7e373abfd4f8a4d3779d129eead451fdf4de7`
+- GitHub Actions run: `37120152798` — SUCCESS
 - Expected branch: `main`
 - Expected repository state after closure: clean and synchronized with `origin/main`
