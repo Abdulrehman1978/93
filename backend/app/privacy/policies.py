@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.channel.registry import InteractionMode
 from app.channel.schemas import ConsentMode, ConsentRequirement
 from app.db.models.governance import PolicyVersion, ProcessingAuthorityType, ProcessingPurpose
 from app.errors import AppException
@@ -34,6 +35,12 @@ class PurposePolicy:
     recipients: tuple[str, ...]
     retention_status: str
     allowed_lawful_authorities: tuple[str, ...] = ()
+    applicable_modes: tuple[InteractionMode, ...] = (
+        InteractionMode.UNSELECTED,
+        InteractionMode.VOICE,
+        InteractionMode.TEXT,
+        InteractionMode.SILENT,
+    )
 
     def __post_init__(self) -> None:
         if not self.allowed_lawful_authorities:
@@ -58,6 +65,7 @@ class PurposePolicy:
             data_categories=self.data_categories,
             recipients=self.recipients,
             retention_status=self.retention_status,
+            applicable_modes=self.applicable_modes,
         )
 
 
@@ -91,6 +99,8 @@ PURPOSE_POLICIES: tuple[PurposePolicy, ...] = (
         ("ephemeral speech signal", "derived transcript"),
         ("approved transcription boundary",),
         "Packet 08 owns ASR processing and retention configuration.",
+        (),
+        (InteractionMode.VOICE,),
     ),
     PurposePolicy(
         "PURP-03",
@@ -106,6 +116,8 @@ PURPOSE_POLICIES: tuple[PurposePolicy, ...] = (
         ("ephemeral acoustic signal",),
         ("approved processing boundary",),
         "Default off; Packet 10 must configure any transient handling.",
+        (),
+        (InteractionMode.VOICE,),
     ),
     PurposePolicy(
         "PURP-06",
@@ -122,6 +134,7 @@ PURPOSE_POLICIES: tuple[PurposePolicy, ...] = (
         ("approved evidence store",),
         "Default off; no raw audio is accepted by Packet 06.",
         ("CONSENT", "LEGAL_OBLIGATION"),
+        (InteractionMode.VOICE,),
     ),
     PurposePolicy(
         "PURP-08",

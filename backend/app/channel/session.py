@@ -23,6 +23,7 @@ from app.config import settings
 from app.db.models.casework import Case, Interaction, InteractionEvent, Subject
 from app.db.models.platform import AuditEvent
 from app.errors import AppException
+from app.logging import logger
 from app.privacy.processing_authorization import promote_interaction_authorizations_to_case
 
 
@@ -140,6 +141,10 @@ class ChannelSessionService:
         self, session: AsyncSession, session_id: uuid.UUID, raw_token: str, *, mutate: bool
     ) -> Interaction:
         if not raw_token or len(raw_token) > 512:
+            logger.warning(
+                "channel session authentication denied",
+                extra={"extra_fields": {"session_id": str(session_id), "reason": "invalid_input"}},
+            )
             raise _invalid_session()
         interaction = await session.scalar(
             select(Interaction).where(Interaction.id == session_id).with_for_update()
@@ -147,14 +152,32 @@ class ChannelSessionService:
             else select(Interaction).where(Interaction.id == session_id)
         )
         if interaction is None or interaction.session_token_digest is None:
+            logger.warning(
+                "channel session authentication denied",
+                extra={"extra_fields": {"session_id": str(session_id), "reason": "not_found"}},
+            )
             raise _invalid_session()
         if not hmac.compare_digest(interaction.session_token_digest, token_digest(raw_token)):
+            logger.warning(
+                "channel session authentication denied",
+                extra={"extra_fields": {"session_id": str(session_id), "reason": "token_mismatch"}},
+            )
             raise _invalid_session()
         now = datetime.now(UTC)
         if interaction.status != "OPEN" or self._expired(interaction, now):
+            logger.warning(
+                "channel session authentication denied",
+                extra={
+                    "extra_fields": {"session_id": str(session_id), "reason": "expired_or_closed"}
+                },
+            )
             raise _invalid_session()
         if mutate:
             interaction.last_activity_at = now
+        logger.info(
+            "channel session authenticated",
+            extra={"extra_fields": {"session_id": str(session_id), "mutate": mutate}},
+        )
         return interaction
 
     @staticmethod

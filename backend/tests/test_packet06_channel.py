@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+import uuid
+from collections.abc import AsyncIterator
+from datetime import UTC, datetime, timedelta
+
 import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,17 +18,21 @@ from app.channel.registry import (
 )
 from app.channel.schemas import (
     ChannelSessionCreate,
+    ChannelSessionResponse,
     ConsentChoice,
     ConsentDecisionRequest,
     IntakeAcknowledgementRequest,
+    SessionPolicyResponse,
 )
 from app.channel.session import ChannelSessionService, token_digest
 from app.database import engine
-from app.db.models.casework import Interaction, InteractionEvent
-from app.db.models.governance import ProcessingAuthorization
+from app.db.models.casework import Case, Interaction, InteractionEvent
+from app.db.models.governance import PolicyVersion, ProcessingAuthorization
 from app.db.models.platform import AuditEvent
+from app.db.models.security import Actor, ActorRoleBinding, Role
 from app.errors import AppException
 from app.privacy.consent_engine import ConsentEngine
+from app.security.principal import SecurityPrincipal
 
 
 def test_channel_registry_reports_only_web_as_live_public_entrypoint() -> None:
@@ -44,6 +52,108 @@ def test_session_tokens_are_digest_only() -> None:
     assert digest != raw
     assert len(digest) == 64
     assert token_digest(raw) == digest
+
+
+@pytest.fixture
+async def packet06_context() -> AsyncIterator[
+    tuple[AsyncSession, ChannelSessionService, ConsentEngine]
+]:
+    async with engine.connect() as connection:
+        transaction = await connection.begin()
+        session = AsyncSession(bind=connection, expire_on_commit=False)
+        try:
+            gateway = ChannelSessionService()
+            yield session, gateway, ConsentEngine(gateway)
+        finally:
+            await session.close()
+            await transaction.rollback()
+            await engine.dispose()
+
+
+async def _new_session(
+    session: AsyncSession,
+    gateway: ChannelSessionService,
+    *,
+    mode: InteractionMode = InteractionMode.UNSELECTED,
+) -> tuple[ChannelSessionResponse, Interaction]:
+    created = await gateway.create(
+        session,
+        ChannelSessionCreate(
+            interaction_mode=mode,
+            client_request_id=f"packet06r2-{uuid.uuid4().hex[:12]}",
+        ),
+    )
+    interaction = await session.get(Interaction, created.session_id)
+    assert interaction is not None
+    return created, interaction
+
+
+async def _acknowledge(
+    session: AsyncSession,
+    consent: ConsentEngine,
+    created: ChannelSessionResponse,
+    interaction: Interaction,
+) -> SessionPolicyResponse:
+    policy = await consent.present_policy(session, interaction)
+    await consent.acknowledge_intake(
+        session,
+        interaction.id,
+        created.session_token,
+        IntakeAcknowledgementRequest(
+            policy_version=policy.policy_version,
+            client_action_id=f"packet06r2-ack-{uuid.uuid4().hex[:12]}",
+        ),
+    )
+    return policy
+
+
+async def _new_case(session: AsyncSession, interaction: Interaction) -> Case:
+    case = Case(
+        id=uuid.uuid4(),
+        public_tracking_id=f"PK06R2-{uuid.uuid4().hex[:16].upper()}",
+        subject_id=interaction.subject_id,
+    )
+    session.add(case)
+    await session.flush()
+    return case
+
+
+async def _supervisor(
+    session: AsyncSession,
+    *,
+    actor_type: str = "STAFF",
+    effective_to: datetime | None = None,
+) -> tuple[Actor, SecurityPrincipal, ActorRoleBinding]:
+    actor = Actor(
+        id=uuid.uuid4(),
+        actor_type=actor_type,
+        display_reference=f"PK06R2-{uuid.uuid4().hex[:12]}",
+        status="ACTIVE",
+    )
+    policy = await session.scalar(
+        select(PolicyVersion).where(PolicyVersion.version_code == "packet-06-consent-v1")
+    )
+    role = await session.scalar(select(Role).where(Role.code == "SUPERVISOR"))
+    assert policy is not None and role is not None
+    binding = ActorRoleBinding(
+        actor_id=actor.id,
+        role_id=role.id,
+        effective_from=datetime.now(UTC) - timedelta(minutes=1),
+        effective_to=effective_to,
+        reason="Packet 06R2 synthetic supervisor fixture",
+        policy_version_id=policy.id,
+    )
+    session.add_all([actor, binding])
+    await session.flush()
+    principal = SecurityPrincipal(
+        actor_id=actor.id,
+        identity_provider="test-oidc",
+        issuer="https://issuer.test",
+        external_subject=f"pk06r2-{actor.id}",
+        actor_type=actor_type,
+        roles=("SUPERVISOR",),
+    )
+    return actor, principal, binding
 
 
 @pytest.mark.integration

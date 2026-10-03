@@ -81,15 +81,22 @@ class ConsentEngine:
                 )
         current = await self._current_decisions(session, interaction.id)
         await session.flush()
+        mode = InteractionMode(interaction.interaction_mode)
+        applicable = tuple(item for item in PURPOSE_POLICIES if mode in item.applicable_modes)
         required = tuple(
             item.as_requirement()
-            for item in PURPOSE_POLICIES
+            for item in applicable
             if item.consent_mode.value in {"REQUIRED", "NOT_REQUIRED"}
         )
         optional = tuple(
             item.as_requirement()
-            for item in PURPOSE_POLICIES
+            for item in applicable
             if item.consent_mode.value in {"OPTIONAL", "PROHIBITED_WITHOUT_HUMAN_AUTHORIZATION"}
+        )
+        conditional = tuple(
+            item.as_requirement()
+            for item in PURPOSE_POLICIES
+            if item.code == "PURP-02" and mode is not InteractionMode.VOICE
         )
         capabilities = tuple(
             ChannelCapabilityResponse(
@@ -113,6 +120,7 @@ class ConsentEngine:
             available_alternatives=("TEXT", "NO_AUDIO", "NO_EXTERNAL_PROVIDER"),
             current_decisions=current,
             capabilities=capabilities,
+            conditional_consents=conditional,
         )
 
     async def record(
@@ -378,8 +386,13 @@ class ConsentEngine:
                     ProcessingAuthorityType,
                     ProcessingAuthorityType.id == ProcessingAuthorization.authority_type_id,
                 )
+                .join(
+                    ProcessingPurpose,
+                    ProcessingPurpose.id == ProcessingAuthorization.processing_purpose_id,
+                )
                 .where(
                     ProcessingAuthorization.interaction_id == interaction.id,
+                    ProcessingPurpose.purpose_code == "PURP-01",
                     ProcessingAuthorityType.authority_code
                     == "VOLUNTARILY_PROVIDED_FOR_SPECIFIED_PURPOSE",
                     ProcessingAuthorization.status == "ACTIVE",

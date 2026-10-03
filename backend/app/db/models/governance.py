@@ -225,12 +225,22 @@ class ProcessingAuthorization(Base):
         Index("ix_processing_authorizations_case_id", "case_id"),
         Index("ix_processing_authorizations_interaction_id", "interaction_id"),
         Index(
-            "uq_processing_authorizations_active_interaction_authority",
+            "uq_processing_authorizations_active_interaction_scope",
             "interaction_id",
             "processing_purpose_id",
             "authority_type_id",
             unique=True,
-            postgresql_where=text("interaction_id IS NOT NULL AND status = 'ACTIVE'"),
+            postgresql_where=text(
+                "interaction_id IS NOT NULL AND case_id IS NULL AND status = 'ACTIVE'"
+            ),
+        ),
+        Index(
+            "uq_processing_authorizations_active_case_scope",
+            "case_id",
+            "processing_purpose_id",
+            "authority_type_id",
+            unique=True,
+            postgresql_where=text("case_id IS NOT NULL AND status = 'ACTIVE'"),
         ),
     )
 

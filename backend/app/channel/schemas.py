@@ -79,6 +79,7 @@ class ConsentRequirement(BaseModel):
     name: str
     lawful_basis: str
     allowed_lawful_authorities: tuple[str, ...] = ()
+    applicable_modes: tuple[InteractionMode, ...] = ()
     consent_mode: ConsentMode
     notice_required: bool
     notice_version: str
@@ -102,6 +103,7 @@ class SessionPolicyResponse(BaseModel):
     available_alternatives: tuple[str, ...]
     current_decisions: dict[str, ConsentChoice]
     capabilities: tuple[ChannelCapabilityResponse, ...]
+    conditional_consents: tuple[ConsentRequirement, ...] = ()
 
 
 class ConsentDecisionRequest(BaseModel):

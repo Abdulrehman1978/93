@@ -452,6 +452,7 @@ export const ConsentRequirementSchema = z.object({
   name: z.string(),
   lawful_basis: z.string(),
   allowed_lawful_authorities: z.array(z.string()).default([]),
+  applicable_modes: z.array(InteractionModeSchema).default([]),
   consent_mode: ConsentModeSchema,
   notice_required: z.boolean(),
   notice_version: z.string(),
@@ -522,5 +523,6 @@ export const SessionPolicyResponseSchema = z.object({
   available_alternatives: z.array(z.string()),
   current_decisions: z.record(z.string(), ConsentChoiceSchema),
   capabilities: z.array(ChannelCapabilitySchema),
+  conditional_consents: z.array(ConsentRequirementSchema).default([]),
 });
 export type SessionPolicyResponse = z.infer<typeof SessionPolicyResponseSchema>;

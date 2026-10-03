@@ -59,10 +59,17 @@ async def create_interaction_authorization(
     purpose_code: str,
     *,
     actor: SecurityPrincipal | None = None,
-    emergency_authority: str | None = None,
+    lawful_authority: str | None = None,
 ) -> ProcessingAuthorization:
     policy = resolve_purpose(purpose_code)
-    if emergency_authority is None and policy.consent_mode in {
+    if lawful_authority == "CONSENT":
+        raise AppException(
+            403,
+            "Consent provenance required",
+            "Consent processing authority must originate from a recorded consent event.",
+            "https://api.sambal.gov.in/errors/consent-provenance-required",
+        )
+    if lawful_authority is None and policy.consent_mode in {
         ConsentMode.REQUIRED,
         ConsentMode.OPTIONAL,
     }:
@@ -72,7 +79,7 @@ async def create_interaction_authorization(
             "This purpose must be authorized through the consent ledger.",
             "https://api.sambal.gov.in/errors/consent-required",
         )
-    if emergency_authority is not None or policy.human_approval_required:
+    if lawful_authority is not None or policy.human_approval_required:
         if actor is None or actor.actor_type != "STAFF" or interaction.case_id is None:
             raise AppException(
                 403,
@@ -80,28 +87,28 @@ async def create_interaction_authorization(
                 "This purpose requires an active human supervisor.",
                 "https://api.sambal.gov.in/errors/human-authorization-required",
             )
-        if emergency_authority not in policy.allowed_lawful_authorities:
+        if lawful_authority not in policy.allowed_lawful_authorities:
             raise AppException(
                 400,
-                "Invalid emergency authority",
-                "The emergency authority is not permitted.",
+                "Invalid lawful authority",
+                "The lawful authority is not permitted.",
                 "https://api.sambal.gov.in/errors/invalid-authority",
             )
     purpose_row, authority_row, policy_row = await _purpose_rows(session, purpose_code)
-    if emergency_authority is not None:
-        emergency_authority_row = await session.scalar(
+    if lawful_authority is not None:
+        lawful_authority_row = await session.scalar(
             select(ProcessingAuthorityType).where(
-                ProcessingAuthorityType.authority_code == emergency_authority
+                ProcessingAuthorityType.authority_code == lawful_authority
             )
         )
-        if emergency_authority_row is None:
+        if lawful_authority_row is None:
             raise AppException(
                 503,
                 "Policy unavailable",
-                "The emergency authority is not configured.",
+                "The lawful authority is not configured.",
                 "https://api.sambal.gov.in/errors/policy-unavailable",
             )
-        authority_row = emergency_authority_row
+        authority_row = lawful_authority_row
     if authority_row.authority_code not in policy.allowed_lawful_authorities:
         raise AppException(
             400,
