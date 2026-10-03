@@ -49,7 +49,9 @@ Packet 06 remains a gateway and consent boundary. It does not capture audio, run
 ## Final evidence
 
 - Implementation commit: `aeff2621480d00888f6a5311fec0fc0007f165c7`
-- Final Packet 06R CI: [37126028108 — SUCCESS](https://github.com/Abdulrehman1978/93/actions/runs/37126028108)
+- Implementation CI: [37126028108 — SUCCESS](https://github.com/Abdulrehman1978/93/actions/runs/37126028108)
+- Evidence closure commit: `acd00b1092956c1b122788da3c3fdc675c477cab`
+- Final Packet 06R CI: [37126115398 — SUCCESS](https://github.com/Abdulrehman1978/93/actions/runs/37126115398)
 - Expected branch: `main`
 - Expected working tree: clean and synchronized with `origin/main`
 
