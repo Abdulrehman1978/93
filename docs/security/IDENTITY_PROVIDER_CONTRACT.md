@@ -6,7 +6,7 @@
 
 ## Required token checks
 
-Validation fails closed unless all of the following hold: signature verifies against a JWKS key identified by `kid`; `alg` is in the approved configuration; `iss`, `aud`, `sub`, `exp`, and `nbf` are valid within bounded clock skew; the token is structurally valid; and the key is available. Unknown `kid` causes a refresh, then denial if still unavailable. JWKS is cached with a bounded lifetime and refreshed on rotation/miss.
+Validation fails closed unless all of the following hold: signature verifies against an RSA JWKS key identified by `kid`; `alg` is one of configured `RS256`, `RS384`, or `RS512`; mandatory `iss`, `aud`, `sub`, and `exp` claims are valid within bounded clock skew; an optional `nbf` claim is validated when present; the token is structurally valid; and the key is available. Unknown `kid` causes a refresh, then denial if still unavailable. JWKS is cached with a bounded lifetime and refreshed on rotation/miss.
 
 The service maps `(issuer, subject, provider_code)` to one active `actor_id` through `actor_identities`. Revoked identities, inactive actors, malformed tokens, wrong issuer/audience, expired tokens, unsupported algorithms, and unknown keys all return the same safe authentication failure class. No local production password fallback exists.
 

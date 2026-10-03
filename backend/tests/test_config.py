@@ -161,3 +161,8 @@ def test_production_valid_configuration_success():
     )
     assert settings.ENVIRONMENT == "production"
     assert settings.DEBUG is False
+
+
+def test_oidc_algorithm_configuration_is_limited_to_rsa_jwks_support():
+    with pytest.raises(ValueError, match="non-empty subset of RS256, RS384, RS512"):
+        Settings(OIDC_ALLOWED_ALGORITHMS=["ES256"])

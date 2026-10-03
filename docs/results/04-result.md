@@ -1,6 +1,6 @@
 # Packet 04 Result — Authorization, RBAC & Privacy Foundation
 
-Status: IMPLEMENTATION COMPLETE — pending owner review.
+Status: PARTIAL — superseded by Packet 04R remediation.
 
 ## Objective
 
@@ -10,7 +10,7 @@ Deliver a deny-by-default identity, authorization, privacy, and audit foundation
 
 - Immutable `0007_authorization_privacy` migration; five security tables, seeded role catalog, actor foreign keys, referral assignment, authorization decision fields; total core tables: 41/45.
 - Provider-neutral OIDC/OAuth JWT boundary with signature, issuer, audience, time, algorithm, `kid`, JWKS cache/rotation, and local identity resolution.
-- Hybrid RBAC/ABAC PDP/PEP with organization, jurisdiction ancestry, case assignment, provider assignment, processing purpose, break-glass, generic 404-style nondisclosure, and tamper-evident append-only audit rows.
+- Hybrid RBAC/ABAC PDP/PEP with organization, jurisdiction ancestry, case assignment, provider assignment, processing purpose, break-glass, generic 404-style nondisclosure, and append-only protected audit rows.
 - Explicit minimum-field DTO projections for case summary and provider referral safe handoff.
 - AES-256-GCM field envelope and external key-provider boundary with rotation and authenticated associated data.
 - Production CORS/encryption/OIDC configuration guardrails and structured token/PII log redaction.
@@ -31,4 +31,4 @@ The concrete OIDC issuer, JWKS endpoint, secret provider, CSRF delivery mode, da
 
 ## Transition gate
 
-Packet 04 is ready for owner review. Packet 05 remains `NOT_STARTED` until explicit Packet 04 approval.
+Packet 04 required the trust-boundary, encryption-enforcement, break-glass, and OIDC corrections delivered by Packet 04R. Packet 05 remains `NOT_STARTED` until explicit Packet 04R approval.

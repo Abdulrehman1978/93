@@ -52,6 +52,8 @@ class ResolvedIdentity:
 class OIDCIdentityProvider:
     """Small fail-closed OIDC verifier with bounded JWKS caching."""
 
+    SUPPORTED_ALGORITHMS = frozenset({"RS256", "RS384", "RS512"})
+
     def __init__(
         self,
         *,
@@ -68,6 +70,8 @@ class OIDCIdentityProvider:
             raise ValueError("OIDC issuer, audience, and JWKS URI are required")
         if not algorithms:
             raise ValueError("At least one approved JWT algorithm is required")
+        if any(algorithm not in self.SUPPORTED_ALGORITHMS for algorithm in algorithms):
+            raise ValueError("OIDC verifier supports only RS256, RS384, and RS512")
         self.issuer = issuer
         self.audience = audience
         self.jwks_uri = jwks_uri
@@ -134,6 +138,8 @@ class OIDCIdentityProvider:
                 new_keys: dict[str, Any] = {}
                 for jwk in payload["keys"]:
                     if not isinstance(jwk, dict) or not isinstance(jwk.get("kid"), str):
+                        continue
+                    if jwk.get("kty") != "RSA":
                         continue
                     if jwk.get("alg") and jwk["alg"] not in self.algorithms:
                         continue

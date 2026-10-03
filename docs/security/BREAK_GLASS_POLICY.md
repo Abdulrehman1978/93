@@ -7,7 +7,8 @@ Rules:
 - Only a role explicitly containing `access.break_glass` can use an elevation.
 - The elevation must be active, effective now, unexpired, and scoped to the requested object/case.
 - Expiry is mandatory and must be after effective start; database checks reject invalid intervals.
-- The approver cannot be the requesting actor.
+- Every active elevation requires a non-null, active human approver whose actor type is `STAFF` or `AUDITOR`; `SYSTEM` actors cannot approve.
+- The approver cannot be the requesting actor. PostgreSQL checks and a trigger enforce these rules, and the authorization service revalidates them at use time.
 - The reason is operationally meaningful but never copied into sensitive content or logs.
 - Every request and use is an audit event; denial and expiry are also auditable.
 - Elevation does not bypass purpose authorization, object existence checks, or safe projections.

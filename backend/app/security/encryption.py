@@ -6,7 +6,11 @@ import base64
 import binascii
 import json
 import secrets
+from collections.abc import Iterator
+from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass
+from functools import lru_cache
 from typing import Protocol
 
 from cryptography.exceptions import InvalidTag
@@ -134,3 +138,55 @@ class FieldEncryptor:
         return self.encrypt(
             self.decrypt(envelope_text, field_name=field_name), field_name=field_name
         )
+
+
+_encryptor_override: ContextVar[FieldEncryptor | None] = ContextVar(
+    "field_encryptor_override", default=None
+)
+_authorized_decryption_fields: ContextVar[frozenset[str]] = ContextVar(
+    "authorized_decryption_fields", default=frozenset()
+)
+
+
+@lru_cache(maxsize=1)
+def _configured_field_encryptor() -> FieldEncryptor:
+    """Build the deployment encryptor lazily from the external secret boundary."""
+    return FieldEncryptor(EnvironmentKeyProvider.from_settings())
+
+
+def current_field_encryptor() -> FieldEncryptor:
+    """Return the request/test override or the deployment-configured encryptor."""
+    return _encryptor_override.get() or _configured_field_encryptor()
+
+
+@contextmanager
+def use_field_encryptor(encryptor: FieldEncryptor) -> Iterator[None]:
+    """Temporarily install an encryptor without changing process-global key material."""
+    token = _encryptor_override.set(encryptor)
+    try:
+        yield
+    finally:
+        _encryptor_override.reset(token)
+
+
+@contextmanager
+def authorized_field_decryption(*field_names: str) -> Iterator[None]:
+    """Permit decryption only inside a policy-enforced sensitive read path."""
+    current = _authorized_decryption_fields.get()
+    token = _authorized_decryption_fields.set(current.union(field_names))
+    try:
+        yield
+    finally:
+        _authorized_decryption_fields.reset(token)
+
+
+def encrypt_for_storage(plaintext: str, *, field_name: str) -> str:
+    """Encrypt a normal ORM-bound plaintext value."""
+    return current_field_encryptor().encrypt(plaintext, field_name=field_name)
+
+
+def decrypt_from_storage(envelope_text: str, *, field_name: str) -> str:
+    """Decrypt only while an authorized repository has opened the field scope."""
+    if field_name not in _authorized_decryption_fields.get():
+        raise EncryptionError("encrypted field decryption requires an authorized read scope")
+    return current_field_encryptor().decrypt(envelope_text, field_name=field_name)

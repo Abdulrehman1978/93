@@ -22,6 +22,7 @@ from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
+from app.db.encrypted import EncryptedText
 
 
 def _uuid() -> Any:
@@ -65,7 +66,9 @@ class SubjectContact(Base):
         _uuid(), ForeignKey("subjects.id", ondelete="CASCADE"), nullable=False
     )
     channel: Mapped[str] = mapped_column(String(20), nullable=False)
-    contact_value: Mapped[str] = mapped_column(Text, nullable=False)
+    contact_value: Mapped[str] = mapped_column(
+        EncryptedText("subject_contacts.contact_value"), nullable=False
+    )
     is_primary: Mapped[bool] = mapped_column(Boolean, server_default=text("false"), nullable=False)
     safe_to_use: Mapped[bool] = mapped_column(Boolean, server_default=text("false"), nullable=False)
     verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
@@ -263,7 +266,9 @@ class TranscriptSegment(Base):
     start_ms: Mapped[int] = mapped_column(Integer, nullable=False)
     end_ms: Mapped[int] = mapped_column(Integer, nullable=False)
     language: Mapped[str] = mapped_column(String(20), nullable=False)
-    content: Mapped[str] = mapped_column(Text, nullable=False)
+    content: Mapped[str] = mapped_column(
+        EncryptedText("transcript_segments.content"), nullable=False
+    )
     confidence: Mapped[float | None] = mapped_column()
     provider: Mapped[str | None] = mapped_column(String(100))
     provider_version: Mapped[str | None] = mapped_column(String(100))
@@ -295,7 +300,9 @@ class Translation(Base):
         _uuid(), ForeignKey("transcript_segments.id", ondelete="CASCADE"), nullable=False
     )
     target_language: Mapped[str] = mapped_column(String(20), nullable=False)
-    translated_content: Mapped[str] = mapped_column(Text, nullable=False)
+    translated_content: Mapped[str] = mapped_column(
+        EncryptedText("translations.translated_content"), nullable=False
+    )
     provider: Mapped[str | None] = mapped_column(String(100))
     provider_version: Mapped[str | None] = mapped_column(String(100))
     confidence: Mapped[float | None] = mapped_column()

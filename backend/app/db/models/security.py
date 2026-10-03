@@ -210,6 +210,10 @@ class AccessElevation(Base):
             "approved_by_actor_id IS NULL OR approved_by_actor_id <> actor_id",
             name="access_elevations_no_self_approval",
         ),
+        CheckConstraint(
+            "status <> 'ACTIVE' OR approved_by_actor_id IS NOT NULL",
+            name="access_elevations_active_requires_approval",
+        ),
         Index("ix_access_elevations_active", "actor_id", "status", "expires_at"),
         Index("ix_access_elevations_case_id", "case_id"),
     )

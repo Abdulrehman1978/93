@@ -151,3 +151,42 @@ CASE_SCOPED_ACTIONS = frozenset(
 
 ASSIGNMENT_REQUIRED_ROLES = frozenset({"HELPLINE_OPERATOR", "CASE_OFFICER"})
 PROVIDER_ROLES = frozenset({"COUNSELLOR", "LEGAL_SUPPORT", "MEDICAL_SUPPORT"})
+
+GLOBAL_ACTIONS = frozenset({"actor.manage", "role.manage", "resource.manage", "access.break_glass"})
+CREATION_ACTIONS = frozenset(
+    {"referral.create", "consent.record", "processing_authorization.manage"}
+)
+
+ACTION_RESOURCE_TYPES: dict[str, frozenset[str]] = {
+    "case.read.summary": frozenset({"case"}),
+    "case.read.sensitive": frozenset({"case"}),
+    "case.update": frozenset({"case"}),
+    "contact.read": frozenset({"contact", "referral"}),
+    "transcript.read": frozenset({"transcript"}),
+    "translation.read": frozenset({"translation"}),
+    "assessment.read": frozenset({"assessment"}),
+    "assessment.review": frozenset({"assessment"}),
+    "referral.read": frozenset({"referral"}),
+    "referral.create": frozenset({"case"}),
+    "referral.approve": frozenset({"referral"}),
+    "referral.transition": frozenset({"referral"}),
+    "support_outcome.read": frozenset({"support_outcome"}),
+    "support_outcome.verify": frozenset({"support_outcome"}),
+    "consent.read": frozenset({"consent"}),
+    "consent.record": frozenset({"case"}),
+    "processing_authorization.read": frozenset({"processing_authorization"}),
+    "processing_authorization.manage": frozenset({"case", "processing_authorization"}),
+    "audit.read": frozenset(
+        {
+            "case",
+            "referral",
+            "assessment",
+            "transcript",
+            "translation",
+            "contact",
+            "consent",
+            "processing_authorization",
+            "support_outcome",
+        }
+    ),
+}

@@ -56,6 +56,8 @@ def test_field_encryption_is_authenticated_versioned_and_rotatable() -> None:
         FieldEncryptor(StaticKeyProvider({"OTHER": b"3" * 32}, "OTHER")).decrypt(
             first, field_name="subject_contacts.contact_value"
         )
+    with pytest.raises(EncryptionError):
+        old.decrypt(first, field_name="transcript_segments.content")
 
 
 @pytest.mark.asyncio
@@ -99,15 +101,32 @@ async def test_oidc_verifier_rejects_invalid_tokens_and_accepts_rotation() -> No
         algorithm="RS256",
         headers={"kid": "KEY-V1"},
     )
+    not_yet_valid = jwt.encode(
+        {**payload, "nbf": now + timedelta(minutes=5)},
+        private_key,
+        algorithm="RS256",
+        headers={"kid": "KEY-V1"},
+    )
     malformed = "not.a.jwt"
     unsigned = jwt.encode(payload, key=None, algorithm="none", headers={"kid": "KEY-V1"})
-    for invalid in (expired, wrong_audience, wrong_issuer, malformed, unsigned):
+    for invalid in (expired, wrong_audience, wrong_issuer, not_yet_valid, malformed, unsigned):
         with pytest.raises(TokenValidationError):
             await provider.validate_token(invalid)
 
     unknown_key = jwt.encode(payload, private_key, algorithm="RS256", headers={"kid": "UNKNOWN"})
     with pytest.raises(TokenValidationError):
         await provider.validate_token(unknown_key)
+
+
+def test_oidc_verifier_rejects_non_rsa_algorithm_configuration() -> None:
+    with pytest.raises(ValueError, match="only RS256, RS384, and RS512"):
+        OIDCIdentityProvider(
+            issuer="https://issuer.example.test",
+            audience="sambal-api",
+            jwks_uri="https://issuer.example.test/.well-known/jwks.json",
+            provider_code="TEST_IDP",
+            algorithms=["ES256"],
+        )
 
 
 async def _jwks(key: dict[str, object]) -> dict[str, object]:

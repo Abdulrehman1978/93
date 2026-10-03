@@ -16,6 +16,6 @@ The logical field name is authenticated as AES-GCM associated data, so moving an
 
 `KeyProvider` is the boundary for KMS/HSM/Vault or a mounted deployment secret. Keys are never stored in PostgreSQL or source. Versioned key configuration permits rotation and `reencrypt` migration. Production configuration fails fast unless key material is present.
 
-The first protected field is `subject_contacts.contact_value`; the same codec is available to transcript, translation, narrative, and other highly sensitive field owners when those features are implemented. DTO projections remain mandatory even when a field is encrypted.
+`EncryptedText` is the normal ORM storage boundary for `subject_contacts.contact_value`, `transcript_segments.content`, and `translations.translated_content`. It encrypts plaintext on every ORM bind and has no plaintext fallback. Result decryption fails closed unless a policy-enforced sensitive access service has opened the exact field scope after authorization. DTO projections remain mandatory even when a field is encrypted.
 
-Verification includes nonce uniqueness, raw SQL plaintext absence, round trip, rotation, wrong-key, tamper, and wrong-field failures.
+Verification writes all three fields through the ORM, inspects raw PostgreSQL values for plaintext absence, then reads through the authorized application boundary. It also covers nonce uniqueness, old-key reads after rotation, wrong-key, tamper, unauthorized ORM reads, and field-bound AAD failures.

@@ -47,12 +47,7 @@ async def case_summary(
     await authorization_service.authorize_or_raise(
         principal,
         "case.read.summary",
-        AuthorizationContext(
-            resource_type="case",
-            resource_id=str(case_id),
-            case_id=case_id,
-            purpose=purpose,
-        ),
+        AuthorizationContext.for_resource("case", case_id, purpose=purpose),
         session,
     )
     view = await projection_service.case_summary(session, case_id)
@@ -71,18 +66,12 @@ async def provider_referral_view(
     purpose: Annotated[str | None, Header(alias="X-Processing-Purpose")] = None,
 ) -> ProviderReferralView:
     """Provider projection is scoped to the assigned referral only."""
-    from sqlalchemy import select
-
-    from app.db.models import Referral
-
-    case_id = await session.scalar(select(Referral.case_id).where(Referral.id == referral_id))
     await authorization_service.authorize_or_raise(
         principal,
         "referral.read",
-        AuthorizationContext(
-            resource_type="referral",
-            resource_id=str(referral_id),
-            case_id=case_id,
+        AuthorizationContext.for_resource(
+            "referral",
+            referral_id,
             purpose=purpose,
             recipient="SERVICE_PROVIDER",
         ),

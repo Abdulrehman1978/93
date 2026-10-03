@@ -94,10 +94,15 @@ class Settings(BaseSettings):
     @field_validator("OIDC_ALLOWED_ALGORITHMS", mode="before")
     @classmethod
     def assemble_oidc_algorithms(cls, v: str | list[str]) -> list[str]:
-        """Allow a comma-separated approved JWT algorithm list."""
+        """Allow only the RSA JWT algorithms implemented by the JWKS verifier."""
         if isinstance(v, str):
-            return [item.strip() for item in v.split(",") if item.strip()]
-        return v
+            algorithms = [item.strip() for item in v.split(",") if item.strip()]
+        else:
+            algorithms = v
+        supported = {"RS256", "RS384", "RS512"}
+        if not algorithms or any(item not in supported for item in algorithms):
+            raise ValueError("OIDC algorithms must be a non-empty subset of RS256, RS384, RS512.")
+        return list(dict.fromkeys(algorithms))
 
     @field_validator("DATABASE_URL")
     @classmethod
