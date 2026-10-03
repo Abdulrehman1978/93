@@ -34,3 +34,11 @@
 | `CLM-12` | "Atrocity victims are entitled to interim cash or kind relief within 7 days." | Legal / Statutory | `STATUTORY` | Rule 12(4), SC/ST (PoA) Rules, 1995. | `docs/SOURCE_REGISTRY.md` (Entry 7) | Binding on District Magistrate/Administration; SAMBAL tracks compliance milestones without claiming administrative executive power. |
 | `CLM-13` | "Prototype adheres to State Emblem Act 2005 by utilizing neutral generic service icons." | Branding / Legal | `DESIGN_POLICY` | State Emblem of India (Prohibition of Improper Use) Act, 2005. | `docs/product/TRAUMA_INFORMED_UX.md` | State emblem is strictly reserved for authorized government entities; prototype does not falsely claim government status. |
 | `CLM-14` | "Tele-MANAS integration provides 24/7 mental health access in 20 languages via 53 cells." | Service / Health | `OFFICIAL_SOURCE` | Tele-MANAS Published National Directory (MoHFW/NIMHANS). | `docs/SOURCE_REGISTRY.md` (Entry 2) | Current integration pattern is `ADAPTER_READY` (simulated telephony handoff); zero false claims of unauthorized live API access. |
+
+## Packet 04 implementation claims
+
+| Claim ID | Product Claim Statement | Claim Category | Truth Status | Source / Verification | Documented Operational Limitation |
+| --- | --- | --- | --- | --- | --- |
+| `CLM-15` | Protected backend operations use deny-by-default hybrid RBAC/ABAC with object, organization, jurisdiction, assignment, and purpose checks. | Security | `IMPLEMENTED` | `backend/app/security/authorization.py`; `tests/test_security_authorization.py`; `docs/security/AUTHORIZATION_MODEL.md` | Concrete policy tuning and production role provisioning remain deployment governance. |
+| `CLM-16` | Highly sensitive contact values have an AES-256-GCM envelope and external key-provider boundary. | Privacy / Security | `IMPLEMENTED` | `backend/app/security/encryption.py`; raw SQL test; `docs/security/FIELD_ENCRYPTION.md` | Production rollout requires a controlled re-encryption runbook for any pre-existing plaintext. |
+| `CLM-17` | Packet 04 does not claim PostgreSQL RLS enforcement. | Security transparency | `IMPLEMENTED` | `docs/security/RLS_DECISION.md`; application PDP/PEP tests | RLS adoption is deferred to a later independent security gate. |

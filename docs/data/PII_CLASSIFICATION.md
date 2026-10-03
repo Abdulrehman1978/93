@@ -1,6 +1,6 @@
 # Packet 03 PII Classification
 
-Status: Packet 03 schema baseline. This classification is a design aid, not a claim that Packet 04 controls are complete.
+Status: Packet 04 baseline implemented; deployment-specific key custody, IdP configuration, and RLS remain external/review controls.
 
 | Classification | Packet 03 examples | Required future controls |
 | --- | --- | --- |
@@ -15,7 +15,7 @@ Status: Packet 03 schema baseline. This classification is a design aid, not a cl
 | Table / columns | Classification | Notes and future owner |
 | --- | --- | --- |
 | `subjects.subject_reference`, `subjects.classification` | `CONFIDENTIAL` | Minimal operational identity state; no name, phone, address, identity number, caste, religion, age, gender, or voice-derived attribute. Packet 04 owns subject identifier protection. |
-| `subject_contacts.contact_value`, `safe_to_use` | `HIGHLY_SENSITIVE` | Only necessary contact channels; plaintext is a temporary Packet 03 limitation and must be prepared for Packet 04 encryption. |
+| `subject_contacts.contact_value`, `safe_to_use` | `HIGHLY_SENSITIVE` | Only necessary contact channels; `contact_value` is stored as an AES-256-GCM envelope through the field-encryption boundary. |
 | `cases.public_tracking_id` | `CONFIDENTIAL` | Safe random/non-semantic public identifier; never derived from phone, district, caste, or date. |
 | `transcript_segments.content` | `HIGHLY_SENSITIVE` | Authoritative narrative source. Packet 04 owns encryption and purpose-scoped access. No assessment copy is stored. |
 | `translations.translated_content` | `HIGHLY_SENSITIVE` | Derived representation; original transcript remains authoritative. |
@@ -30,4 +30,4 @@ Status: Packet 03 schema baseline. This classification is a design aid, not a cl
 
 ## Explicitly absent in Packet 03
 
-The schema intentionally has no raw audio path, voiceprint, credibility score, lie score, inferred caste field, research corpus, vector embedding, facial analysis, or generic narrative JSON field. Encryption, key management, RBAC, and RLS remain Packet 04 work.
+The schema intentionally has no raw audio path, voiceprint, credibility score, lie score, inferred caste field, research corpus, vector embedding, facial analysis, or generic narrative JSON field. Packet 04 implements the application authorization and encryption baseline; RLS is explicitly deferred under `docs/security/RLS_DECISION.md`.

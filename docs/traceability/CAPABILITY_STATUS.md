@@ -6,7 +6,7 @@
 
 ---
 
-## 1. Capability Status Matrix (Post-Packet 02 Review)
+## 1. Capability Status Matrix (Post-Packet 04 Review)
 
 | Capability / Module | Runtime Truth State | Operational Description & Execution Boundary | Evidence Artifact / Provider |
 | :--- | :--- | :--- | :--- |
@@ -32,6 +32,7 @@
 | **Bhashini MeitY Cloud ASR** | `ADAPTER_READY` | Cloud ASR fallback candidate for Packet 08 benchmarking. | `backend/app/intelligence/contracts.py`. |
 | **Canonical PostgreSQL Container** | `FOUNDATION_CONTAINER_READY` | Pinned `postgres:16.15-alpine` running on port 5493. Domain tables and Alembic migrations scheduled for Packet 03. | `docker-compose.yml`; verified healthy in clean CI. |
 | **MinIO Object Storage Container** | `FOUNDATION_CONTAINER_READY` | Pinned release tag `quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z` on port 9093 with non-blocking readiness. | `docker-compose.yml`; verified healthy in clean CI. |
+| **Identity, Authorization & Privacy Foundation** | `FOUNDATION_READY` | Provider-neutral OIDC boundary, deny-by-default RBAC/ABAC PDP/PEP, object-level scope, purpose gates, field encryption, audit decisions, and minimum-field projections. Concrete IdP/key custody and RLS remain deployment/Packet 27 gates. | `docs/security/`; `backend/app/security/`; `docs/results/04-result.md`. |
 
 ---
 

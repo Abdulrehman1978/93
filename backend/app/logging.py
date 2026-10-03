@@ -20,6 +20,8 @@ correlation_id_ctx: ContextVar[str] = ContextVar("correlation_id_ctx", default="
 AADHAAR_PATTERN = re.compile(r"\b\d{4}\s?\d{4}\s?\d{4}\b")
 INDIAN_PHONE_PATTERN = re.compile(r"(?:\+91[-\s]?)?\b[6-9]\d{9}\b")
 EMAIL_PATTERN = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b")
+BEARER_TOKEN_PATTERN = re.compile(r"(?i)(bearer\s+)[A-Za-z0-9._~+/=-]+")
+TOKEN_ASSIGNMENT_PATTERN = re.compile(r"(?i)(token\s*[=:]\s*)[^\s,;]+")
 
 # Prohibited keys: citizen narratives, raw speech, credentials, identity docs
 PROHIBITED_LOG_KEYS = {
@@ -43,6 +45,8 @@ PROHIBITED_LOG_KEYS = {
 
 def redact_pii(text: str) -> str:
     """Redact sensitive PII elements from log messages."""
+    text = BEARER_TOKEN_PATTERN.sub(r"\1[REDACTED_TOKEN]", text)
+    text = TOKEN_ASSIGNMENT_PATTERN.sub(r"\1[REDACTED_TOKEN]", text)
     text = AADHAAR_PATTERN.sub("[REDACTED_AADHAAR]", text)
     text = INDIAN_PHONE_PATTERN.sub("[REDACTED_PHONE]", text)
     text = EMAIL_PATTERN.sub("[REDACTED_EMAIL]", text)

@@ -110,7 +110,10 @@ class AuditEvent(Base):
     id: Mapped[uuid.UUID] = mapped_column(
         _uuid(), primary_key=True, server_default=text("gen_random_uuid()")
     )
-    actor_reference: Mapped[str | None] = mapped_column(String(255))
+    actor_id: Mapped[uuid.UUID | None] = mapped_column(
+        _uuid(), ForeignKey("actors.id", ondelete="RESTRICT")
+    )
+    external_actor_reference: Mapped[str | None] = mapped_column(String(255))
     organization_id: Mapped[uuid.UUID | None] = mapped_column(
         _uuid(), ForeignKey("organizations.id", ondelete="RESTRICT")
     )
@@ -123,11 +126,18 @@ class AuditEvent(Base):
     reason: Mapped[str | None] = mapped_column(Text)
     correlation_id: Mapped[str | None] = mapped_column(String(255))
     safe_metadata: Mapped[dict[str, object] | None] = mapped_column(JSONB)
+    decision: Mapped[str | None] = mapped_column(String(10))
+    reason_code: Mapped[str | None] = mapped_column(String(100))
+    purpose: Mapped[str | None] = mapped_column(String(80))
+    policy_version_id: Mapped[uuid.UUID | None] = mapped_column(
+        _uuid(), ForeignKey("policy_versions.id", ondelete="RESTRICT")
+    )
     occurred_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
 
     __table_args__ = (
+        Index("ix_audit_events_actor_id", "actor_id"),
         Index("ix_audit_events_entity_time", "entity_type", "entity_id", "occurred_at"),
         Index("ix_audit_events_occurred_at", "occurred_at"),
     )
@@ -148,7 +158,10 @@ class DeletionRequest(Base):
     authority: Mapped[str] = mapped_column(String(255), nullable=False)
     source_class: Mapped[str] = mapped_column(String(80), nullable=False)
     new_expiry: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    approver_reference: Mapped[str | None] = mapped_column(String(255))
+    approver_actor_id: Mapped[uuid.UUID | None] = mapped_column(
+        _uuid(), ForeignKey("actors.id", ondelete="RESTRICT")
+    )
+    external_approver_reference: Mapped[str | None] = mapped_column(String(255))
     requested_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
@@ -163,5 +176,6 @@ class DeletionRequest(Base):
             "state <> 'DELETION_VERIFIED' OR completed_at IS NOT NULL",
             name="deletion_requests_verified_requires_completion",
         ),
+        Index("ix_deletion_requests_approver_actor_id", "approver_actor_id"),
         Index("ix_deletion_requests_state", "state", "requested_at"),
     )

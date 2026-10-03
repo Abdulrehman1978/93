@@ -35,6 +35,13 @@ from app.db.models.platform import (  # noqa: F401
     DeletionRequest,
     IntegrationEvent,
 )
+from app.db.models.security import (  # noqa: F401
+    AccessElevation,
+    Actor,
+    ActorIdentity,
+    ActorRoleBinding,
+    Role,
+)
 from app.db.models.support import (  # noqa: F401
     ContactAttempt,
     ContactAttemptPolicy,
@@ -84,4 +91,9 @@ __all__ = [
     "ResourceVerification",
     "ServiceResource",
     "SupportOutcome",
+    "AccessElevation",
+    "Actor",
+    "ActorIdentity",
+    "ActorRoleBinding",
+    "Role",
 ]

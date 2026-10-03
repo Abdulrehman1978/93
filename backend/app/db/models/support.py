@@ -103,7 +103,10 @@ class ResourceVerification(Base):
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
     verification_method: Mapped[str] = mapped_column(String(40), nullable=False)
-    verified_by: Mapped[str] = mapped_column(String(255), nullable=False)
+    verified_by_actor_id: Mapped[uuid.UUID | None] = mapped_column(
+        _uuid(), ForeignKey("actors.id", ondelete="RESTRICT")
+    )
+    external_verifier_reference: Mapped[str | None] = mapped_column(String(255))
     result: Mapped[str] = mapped_column(String(25), nullable=False)
     source_reference: Mapped[str | None] = mapped_column(String(500))
     notes: Mapped[str | None] = mapped_column(Text)
@@ -113,6 +116,7 @@ class ResourceVerification(Base):
             "result IN ('VERIFIED_CURRENT','STALE','UNAVAILABLE','UNABLE_TO_VERIFY')",
             name="resource_verifications_result",
         ),
+        Index("ix_resource_verifications_verified_by_actor_id", "verified_by_actor_id"),
         Index("ix_resource_verifications_resource_time", "service_resource_id", "verified_at"),
     )
 
@@ -129,6 +133,9 @@ class Referral(Base):
     service_type: Mapped[str] = mapped_column(String(80), nullable=False)
     service_resource_id: Mapped[uuid.UUID | None] = mapped_column(
         _uuid(), ForeignKey("service_resources.id", ondelete="RESTRICT")
+    )
+    assigned_provider_actor_id: Mapped[uuid.UUID | None] = mapped_column(
+        _uuid(), ForeignKey("actors.id", ondelete="RESTRICT")
     )
     processing_authorization_id: Mapped[uuid.UUID] = mapped_column(
         _uuid(), ForeignKey("processing_authorizations.id", ondelete="RESTRICT"), nullable=False
@@ -165,6 +172,7 @@ class Referral(Base):
         CheckConstraint("version > 0", name="referrals_version_positive"),
         Index("ix_referrals_queue", "status", "next_action_at", "priority"),
         Index("ix_referrals_case_id", "case_id"),
+        Index("ix_referrals_assigned_provider_actor_id", "assigned_provider_actor_id"),
     )
 
 
@@ -179,7 +187,10 @@ class ReferralEvent(Base):
     )
     previous_status: Mapped[str | None] = mapped_column(String(30))
     new_status: Mapped[str] = mapped_column(String(30), nullable=False)
-    actor_reference: Mapped[str | None] = mapped_column(String(255))
+    actor_id: Mapped[uuid.UUID | None] = mapped_column(
+        _uuid(), ForeignKey("actors.id", ondelete="RESTRICT")
+    )
+    external_actor_reference: Mapped[str | None] = mapped_column(String(255))
     reason: Mapped[str] = mapped_column(Text, nullable=False)
     occurred_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
@@ -194,6 +205,7 @@ class ReferralEvent(Base):
             "previous_status IS NULL OR previous_status IN ('RECOMMENDED','REVIEW_REQUIRED','APPROVED','DECLINED','REFERRED','ACKNOWLEDGED','CONTACT_PENDING','CONTACTED','APPOINTMENT_SCHEDULED','SERVICE_STARTED','FOLLOW_UP_DUE','COMPLETED','UNABLE_TO_CONTACT','ESCALATED','CANCELLED')",
             name="referral_events_previous_status",
         ),
+        Index("ix_referral_events_actor_id", "actor_id"),
         Index("ix_referral_events_referral_time", "referral_id", "occurred_at"),
     )
 
@@ -213,7 +225,10 @@ class SupportOutcome(Base):
     )
     provenance: Mapped[dict[str, object] | None] = mapped_column(JSONB)
     verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
-    verified_by: Mapped[str | None] = mapped_column(String(255))
+    verified_by_actor_id: Mapped[uuid.UUID | None] = mapped_column(
+        _uuid(), ForeignKey("actors.id", ondelete="RESTRICT")
+    )
+    external_verifier_reference: Mapped[str | None] = mapped_column(String(255))
     document_reference: Mapped[str | None] = mapped_column(String(500))
     notes_reference: Mapped[str | None] = mapped_column(String(500))
     created_at: Mapped[datetime] = mapped_column(
@@ -229,6 +244,7 @@ class SupportOutcome(Base):
             "evidence_state IN ('UNVERIFIED','PROVIDER_CONFIRMED','CITIZEN_CONFIRMED','DUAL_CONFIRMED','DOCUMENT_CONFIRMED','UNABLE_TO_VERIFY')",
             name="support_outcomes_evidence_state",
         ),
+        Index("ix_support_outcomes_verified_by_actor_id", "verified_by_actor_id"),
         Index("ix_support_outcomes_referral_time", "referral_id", "created_at"),
     )
 

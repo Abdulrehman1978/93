@@ -16,6 +16,10 @@
 | Job claims are concurrency-safe | Queue index on `(status, available_at, priority)` and reference-only payload | Future worker uses `FOR UPDATE SKIP LOCKED` | Packet 04 limits job payload access | Queue structure test |
 | Audit is not domain history | `audit_events` is separate from status/event ledgers and has safe metadata only | Every consequential operation writes both where required | Packet 04 identifies actor and scope | Audit append test |
 
+| Authorization is deny-by-default | `roles`, `actor_role_bindings`, and `access_elevations` have status/effective/expiry and no-self-grant checks | One PDP evaluates role, scope, assignment, purpose, and elevation before projection | Protected services must call the PDP | Packet 04 authorization matrix |
+| Internal actor references are authoritative | Sensitive actor fields use nullable `actors.id`; external identities use named external-reference columns | Identity provider resolution maps issuer+subject to local actor | No token role claims are trusted | Packet 04 identity tests |
+| Sensitive fields are encrypted at rest | Field envelope stores version, algorithm, key ID, nonce, ciphertext; key material is external | KeyProvider owns rotation and decryption | DTOs still minimize plaintext exposure | Packet 04 crypto/raw SQL tests |
+
 Historical migration revisions are immutable snapshots. A static test rejects ORM/model imports and metadata-table creation from `backend/alembic/versions`; the replay gate proves `upgrade head -> downgrade base -> upgrade head -> alembic check` on PostgreSQL 16.15.
 
 Transactional boundaries are: case + first interaction; assessment + evidence + model run; review + assessment state change; referral + first event; and consent event + authorization update. These operations belong in one application transaction when implemented.

@@ -93,3 +93,22 @@ erDiagram
         string state
     }
 ```
+
+## Authorization and privacy governance
+
+```mermaid
+erDiagram
+    ACTORS ||--o{ ACTOR_IDENTITIES : authenticates
+    ACTORS ||--o{ ACTOR_ROLE_BINDINGS : receives
+    ROLES ||--o{ ACTOR_ROLE_BINDINGS : grants
+    ACTORS ||--o{ ACCESS_ELEVATIONS : requests
+    ACTORS ||--o{ AUDIT_EVENTS : causes
+    ACTORS ||--o{ CASE_PARTICIPANTS : assigned
+    ACTORS ||--o{ REFERRALS : assigned_provider
+    CASES ||--o{ ACCESS_ELEVATIONS : scopes
+    CASES ||--o{ PROCESSING_AUTHORIZATIONS : scopes
+    POLICY_VERSIONS ||--o{ ACTOR_ROLE_BINDINGS : governs
+    POLICY_VERSIONS ||--o{ AUDIT_EVENTS : records
+```
+
+Internal actor references use `actors.id`; external references are retained only in explicitly named `external_*_reference` columns.

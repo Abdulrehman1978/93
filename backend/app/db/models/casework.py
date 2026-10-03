@@ -138,7 +138,10 @@ class CaseParticipant(Base):
     case_id: Mapped[uuid.UUID] = mapped_column(
         _uuid(), ForeignKey("cases.id", ondelete="CASCADE"), nullable=False
     )
-    participant_reference: Mapped[str] = mapped_column(String(255), nullable=False)
+    actor_id: Mapped[uuid.UUID | None] = mapped_column(
+        _uuid(), ForeignKey("actors.id", ondelete="RESTRICT")
+    )
+    external_actor_reference: Mapped[str | None] = mapped_column(String(255))
     participant_type: Mapped[str] = mapped_column(String(30), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
@@ -150,6 +153,7 @@ class CaseParticipant(Base):
             name="case_participants_type",
         ),
         Index("ix_case_participants_case_id", "case_id"),
+        Index("ix_case_participants_actor_id", "actor_id"),
     )
 
 
@@ -164,7 +168,10 @@ class CaseStatusEvent(Base):
     )
     previous_status: Mapped[str | None] = mapped_column(String(30))
     new_status: Mapped[str] = mapped_column(String(30), nullable=False)
-    actor_reference: Mapped[str | None] = mapped_column(String(255))
+    actor_id: Mapped[uuid.UUID | None] = mapped_column(
+        _uuid(), ForeignKey("actors.id", ondelete="RESTRICT")
+    )
+    external_actor_reference: Mapped[str | None] = mapped_column(String(255))
     reason: Mapped[str] = mapped_column(Text, nullable=False)
     policy_source: Mapped[str | None] = mapped_column(String(255))
     occurred_at: Mapped[datetime] = mapped_column(
@@ -181,6 +188,7 @@ class CaseStatusEvent(Base):
             name="case_status_events_previous_status",
         ),
         Index("ix_case_status_events_case_time", "case_id", "occurred_at"),
+        Index("ix_case_status_events_actor_id", "actor_id"),
     )
 
 

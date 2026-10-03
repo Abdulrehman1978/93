@@ -189,7 +189,10 @@ class ProcessingAuthorization(Base):
     consent_event_id: Mapped[uuid.UUID | None] = mapped_column(
         _uuid(), ForeignKey("consent_events.id", ondelete="RESTRICT")
     )
-    actor_reference: Mapped[str | None] = mapped_column(String(255))
+    actor_id: Mapped[uuid.UUID | None] = mapped_column(
+        _uuid(), ForeignKey("actors.id", ondelete="RESTRICT")
+    )
+    external_actor_reference: Mapped[str | None] = mapped_column(String(255))
     authorization_reason: Mapped[str] = mapped_column(Text, nullable=False)
     policy_version_id: Mapped[uuid.UUID] = mapped_column(
         _uuid(), ForeignKey("policy_versions.id", ondelete="RESTRICT"), nullable=False
@@ -208,6 +211,7 @@ class ProcessingAuthorization(Base):
             "expires_at IS NULL OR expires_at >= created_at",
             name="processing_authorizations_expiry",
         ),
+        Index("ix_processing_authorizations_actor_id", "actor_id"),
         Index("ix_processing_authorizations_case_id", "case_id"),
         Index("ix_processing_authorizations_interaction_id", "interaction_id"),
     )
@@ -233,7 +237,10 @@ class ConsentEvent(Base):
         _uuid(), ForeignKey("policy_versions.id", ondelete="RESTRICT"), nullable=False
     )
     channel: Mapped[str] = mapped_column(String(30), nullable=False)
-    actor_reference: Mapped[str | None] = mapped_column(String(255))
+    actor_id: Mapped[uuid.UUID | None] = mapped_column(
+        _uuid(), ForeignKey("actors.id", ondelete="RESTRICT")
+    )
+    external_actor_reference: Mapped[str | None] = mapped_column(String(255))
     occurred_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
@@ -251,5 +258,6 @@ class ConsentEvent(Base):
             "channel IN ('PORTAL','VOICE','TEXT','IVR','OPERATOR','SYSTEM')",
             name="consent_events_channel",
         ),
+        Index("ix_consent_events_actor_id", "actor_id"),
         Index("ix_consent_events_subject_purpose_time", "subject_id", "purpose_id", "occurred_at"),
     )

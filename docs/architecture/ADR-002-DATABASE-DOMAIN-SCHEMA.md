@@ -1,10 +1,10 @@
 # ADR-002: PostgreSQL Domain Schema Foundation
 
-Status: Accepted for Packet 03 implementation, pending owner review.
+Status: Accepted for Packet 03 implementation and closed by Packet 03R owner approval; Packet 04 authorization/privacy additions are in docs/security/ and migration 0007.
 
 ## Decision
 
-Use PostgreSQL 16.15+ as the sole canonical relational database. SQLAlchemy 2.x async with asyncpg owns runtime access; Alembic owns reproducible schema changes. Packet 03 contains 36 core tables, below the 45-table ceiling, grouped into six readable migrations. Each revision is an immutable, self-contained snapshot expressed with explicit Alembic operations; revisions never import current ORM models or `Base.metadata`.
+Use PostgreSQL 16.15+ as the sole canonical relational database. SQLAlchemy 2.x async with asyncpg owns runtime access; Alembic owns reproducible schema changes. Packet 03 contains 36 core tables and Packet 04 adds five security tables for 41 total, below the 45-table ceiling. Each revision is an immutable, self-contained snapshot expressed with explicit Alembic operations; revisions never import current ORM models or `Base.metadata`.
 
 The schema is normalized around the approved domain distinctions:
 
@@ -19,7 +19,7 @@ The schema is normalized around the approved domain distinctions:
 
 Stable product statuses use `TEXT/VARCHAR` plus named check constraints, allowing controlled evolution without irreversible PostgreSQL ENUM types. Lawful authorities are a catalog with effective dates and the independent `authority_source_class` vocabulary `STATUTORY`, `REGULATORY`, `CONSTITUTIONAL`, `EXECUTIVE_POLICY`, and `PRODUCT_POLICY`. Safe callback windows use PostgreSQL `TIME` local wall-clock values. JSONB is limited to variable external metadata/provenance; core domain fields are typed columns.
 
-PII is minimized and separated: `subjects` is deliberately small, `subject_contacts` owns contact channels, and transcript/evidence/referral fields do not duplicate names, phones, addresses, identity numbers, caste, or inferred attributes. Packet 04 must add encryption/key management, RBAC, purpose-scoped authorization, and RLS as appropriate; Packet 03 does not claim those controls.
+PII is minimized and separated: `subjects` is deliberately small, `subject_contacts` owns contact channels, and transcript/evidence/referral fields do not duplicate names, phones, addresses, identity numbers, caste, or inferred attributes. Packet 04 adds application encryption/key management, RBAC, purpose-scoped authorization, actor identity, and explicit projections. RLS is not claimed; the decision and future adoption gate are recorded in `docs/security/RLS_DECISION.md`.
 
 AI and domain histories are append-oriented with database update guards. Authorized retention/deletion workflows remain possible because the guards protect updates, not governed deletion actions.
 

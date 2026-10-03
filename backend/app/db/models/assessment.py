@@ -263,7 +263,10 @@ class AssessmentReview(Base):
     assessment_id: Mapped[uuid.UUID] = mapped_column(
         _uuid(), ForeignKey("assessments.id", ondelete="RESTRICT"), nullable=False
     )
-    actor_reference: Mapped[str] = mapped_column(String(255), nullable=False)
+    actor_id: Mapped[uuid.UUID | None] = mapped_column(
+        _uuid(), ForeignKey("actors.id", ondelete="RESTRICT")
+    )
+    external_actor_reference: Mapped[str | None] = mapped_column(String(255))
     action: Mapped[str] = mapped_column(String(30), nullable=False)
     reason: Mapped[str] = mapped_column(Text, nullable=False)
     previous_output_reference: Mapped[str | None] = mapped_column(String(500))
@@ -280,5 +283,6 @@ class AssessmentReview(Base):
             "action IN ('ACCEPT','MODIFY','DISMISS','ESCALATE','REQUEST_SUPERVISOR','CORRECT_TRANSCRIPT','CORRECT_FACT','FLAG_AI_ERROR')",
             name="assessment_reviews_action",
         ),
+        Index("ix_assessment_reviews_actor_id", "actor_id"),
         Index("ix_assessment_reviews_assessment_time", "assessment_id", "created_at"),
     )

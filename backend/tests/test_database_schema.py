@@ -163,7 +163,7 @@ async def test_fresh_schema_is_within_budget_and_privacy_guardrails(
             "WHERE table_schema = 'public' AND table_type = 'BASE TABLE' AND table_name <> 'alembic_version'"
         )
     )
-    assert table_count == 36
+    assert table_count == 41
     assert table_count <= 45
 
     forbidden_columns = await db_connection.scalars(
@@ -294,7 +294,13 @@ async def test_resource_outcome_policy_and_queue_dimensions_are_separate(
             )
         )
     )
-    assert {"evidence_state", "verified_at", "verified_by", "provenance"}.issubset(outcome_columns)
+    assert {
+        "evidence_state",
+        "verified_at",
+        "verified_by_actor_id",
+        "external_verifier_reference",
+        "provenance",
+    }.issubset(outcome_columns)
     policy_columns = set(
         await db_connection.scalars(
             text(
@@ -331,6 +337,21 @@ async def test_append_only_history_and_audit_protection(db_connection: AsyncConn
             await db_connection.execute(
                 text("UPDATE case_status_events SET reason = 'tampered' WHERE id = :event_id"),
                 {"event_id": event_id},
+            )
+    audit_id = (
+        await db_connection.execute(
+            text(
+                "INSERT INTO audit_events (action, entity_type, entity_id, reason) "
+                "VALUES ('TEST', 'CASE', :case_id, 'synthetic audit') RETURNING id"
+            ),
+            {"case_id": case_id},
+        )
+    ).scalar_one()
+    with pytest.raises(DBAPIError):
+        async with db_connection.begin_nested():
+            await db_connection.execute(
+                text("DELETE FROM audit_events WHERE id = :audit_id"),
+                {"audit_id": audit_id},
             )
 
 

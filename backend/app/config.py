@@ -51,6 +51,22 @@ class Settings(BaseSettings):
         "http://127.0.0.1:3093",
     ]
 
+    # Provider-neutral OIDC/OAuth verification boundary. A concrete production
+    # provider remains deployment configuration, never a domain-model import.
+    OIDC_PROVIDER_CODE: str = "unconfigured"
+    OIDC_ISSUER: str | None = None
+    OIDC_AUDIENCE: str | None = None
+    OIDC_JWKS_URI: str | None = None
+    OIDC_ALLOWED_ALGORITHMS: list[str] | str = ["RS256"]
+    OIDC_CLOCK_SKEW_SECONDS: int = 30
+    OIDC_JWKS_CACHE_SECONDS: int = 300
+
+    # Application-level AEAD key material. Production must inject a real secret
+    # from a KMS/HSM/Vault/secure mounted secret, never source or database data.
+    FIELD_ENCRYPTION_KEY: str | None = None
+    FIELD_ENCRYPTION_KEY_ID: str = "DEV-KEY-1"
+    FIELD_ENCRYPTION_KEYS_JSON: str | None = None
+
     # Telemetry & PII Protection
     LOG_LEVEL: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
     PII_MASKING_ENABLED: bool = True
@@ -73,6 +89,14 @@ class Settings(BaseSettings):
                 except Exception:
                     pass
             return [i.strip() for i in stripped.split(",") if i.strip()]
+        return v
+
+    @field_validator("OIDC_ALLOWED_ALGORITHMS", mode="before")
+    @classmethod
+    def assemble_oidc_algorithms(cls, v: str | list[str]) -> list[str]:
+        """Allow a comma-separated approved JWT algorithm list."""
+        if isinstance(v, str):
+            return [item.strip() for item in v.split(",") if item.strip()]
         return v
 
     @field_validator("DATABASE_URL")
@@ -131,6 +155,26 @@ class Settings(BaseSettings):
                 raise ValueError(
                     "Default development MinIO credentials rejected in staging/production."
                 )
+
+            if "*" in self.ALLOWED_ORIGINS:
+                raise ValueError("Wildcard CORS origins are rejected in staging/production.")
+
+            if self.FIELD_ENCRYPTION_KEY is None and self.FIELD_ENCRYPTION_KEYS_JSON is None:
+                raise ValueError(
+                    "Production requires field-encryption key material from an external secret provider."
+                )
+
+            configured_oidc = (
+                self.OIDC_ISSUER,
+                self.OIDC_AUDIENCE,
+                self.OIDC_JWKS_URI,
+            )
+            if any(configured_oidc) and not all(configured_oidc):
+                raise ValueError("OIDC issuer, audience, and JWKS URI must be configured together.")
+            if self.OIDC_ISSUER and any(
+                value in self.OIDC_ISSUER.lower() for value in ("localhost", "127.0.0.1")
+            ):
+                raise ValueError("Development localhost OIDC issuers are rejected in production.")
 
         return self
 

@@ -157,6 +157,7 @@ def test_production_valid_configuration_success():
         S3_ACCESS_KEY="AKIA_PROD_VERIFIED_KEY",
         S3_SECRET_KEY="PROD_VERIFIED_SECRET_KEY_NOT_DEV_VALUE",
         S3_BUCKET_NAME="sambal-production-evidence",
+        FIELD_ENCRYPTION_KEY="MTExMTExMTExMTExMTExMTExMTExMTExMTExMTExMQ==",
     )
     assert settings.ENVIRONMENT == "production"
     assert settings.DEBUG is False
