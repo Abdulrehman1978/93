@@ -13,6 +13,16 @@ import {
 } from "react";
 import { cn } from "@/lib/cn";
 
+function mergeIds(...values: Array<string | undefined>) {
+  return (
+    Array.from(
+      new Set(
+        values.flatMap((value) => value?.split(/\s+/) ?? []).filter(Boolean),
+      ),
+    ).join(" ") || undefined
+  );
+}
+
 export function Label(props: LabelHTMLAttributes<HTMLLabelElement>) {
   return <label {...props} className={cn("field__label", props.className)} />;
 }
@@ -47,6 +57,8 @@ export function FormField({
     id?: string;
     "aria-describedby"?: string;
     "aria-invalid"?: boolean;
+    required?: boolean;
+    "aria-required"?: boolean;
   }>;
   className?: string;
 }) {
@@ -55,8 +67,15 @@ export function FormField({
   const controlId = child.props.id ?? `field-${generatedId}`;
   const helperId = helperText ? `${controlId}-help` : undefined;
   const errorId = error ? `${controlId}-error` : undefined;
-  const describedBy =
-    [helperId, errorId].filter(Boolean).join(" ") || undefined;
+  const describedBy = mergeIds(
+    child.props["aria-describedby"],
+    helperId,
+    errorId,
+  );
+  const isCompatibleRequiredControl =
+    typeof child.type === "string"
+      ? ["input", "select", "textarea"].includes(child.type)
+      : ([Input, Select, Textarea] as unknown[]).includes(child.type);
 
   return (
     <div className={cn("field", className)}>
@@ -67,12 +86,25 @@ export function FormField({
       {cloneElement(child, {
         id: controlId,
         "aria-describedby": describedBy,
-        "aria-invalid": error ? true : undefined,
+        "aria-invalid": error ? true : child.props["aria-invalid"],
+        ...(required && isCompatibleRequiredControl
+          ? { required: true, "aria-required": true }
+          : {}),
       })}
       {helperText ? <HelperText id={helperId}>{helperText}</HelperText> : null}
       {error ? <FieldError id={errorId}>{error}</FieldError> : null}
     </div>
   );
+}
+
+export function focusFirstInvalid(root?: ParentNode) {
+  if (typeof document === "undefined") return null;
+  const container = root ?? document;
+  const firstInvalid = container.querySelector<HTMLElement>(
+    '[aria-invalid="true"], :invalid',
+  );
+  firstInvalid?.focus();
+  return firstInvalid;
 }
 
 export function Input({

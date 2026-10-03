@@ -23,6 +23,7 @@ import {
   EmptyState,
   ErrorState,
   EvidenceChip,
+  ErrorRecoveryDemo,
   FormField,
   HumanReviewStatus,
   IconButton,
@@ -245,6 +246,14 @@ export default function DesignSystemPage() {
               </div>
             </form>
           </Panel>
+        </section>
+
+        <section id="error-recovery" className="showcase-section">
+          <SectionHeader
+            title="Error recovery"
+            description="A focused summary and field links give keyboard users a clear recovery path after a failed synthetic submission."
+          />
+          <ErrorRecoveryDemo />
         </section>
 
         <section id="feedback" className="showcase-section">

@@ -19,9 +19,14 @@ test.describe("Civic Calm design-system verification", () => {
     await page.keyboard.type("DEMO-KEYBOARD-05");
     await expect(reference).toHaveValue("DEMO-KEYBOARD-05");
 
-    const languageSearch = page.getByRole("searchbox", { name: "Language" });
+    const languageSearch = page.getByRole("combobox", { name: "Language" });
+    await expect(languageSearch).toHaveAttribute("aria-controls");
     await languageSearch.focus();
     await page.keyboard.type("Urdu");
+    await expect(languageSearch).toHaveAttribute(
+      "aria-activedescendant",
+      /option-ur/,
+    );
     await page.keyboard.press("Enter");
     await expect(page.getByText(/Selected:/)).toContainText("اردو");
 
@@ -29,9 +34,50 @@ test.describe("Civic Calm design-system verification", () => {
     await trigger.focus();
     await page.keyboard.press("Enter");
     await expect(page.getByRole("dialog")).toBeVisible();
+    await expect(
+      page.getByRole("button", { name: "Close dialog" }),
+    ).toBeFocused();
     await page.keyboard.press("Escape");
     await expect(page.getByRole("dialog")).not.toBeVisible();
     await expect(trigger).toBeFocused();
+  });
+
+  test("tooltip has one focus stop and invalid form recovery is keyboard usable", async ({
+    page,
+  }) => {
+    await page.goto("/design-system");
+
+    const tooltipTrigger = page.getByRole("button", { name: "More context" });
+    await tooltipTrigger.focus();
+    await expect(tooltipTrigger).toHaveAttribute("aria-describedby");
+    await expect(page.getByRole("tooltip")).toBeAttached();
+    await page.keyboard.press("Tab");
+    await expect(page.locator(".popover summary")).toBeFocused();
+
+    const submit = page.getByRole("button", {
+      name: "Submit synthetic invalid form",
+    });
+    await submit.focus();
+    await page.keyboard.press("Enter");
+    await expect(
+      page.getByRole("heading", {
+        name: "Please check the highlighted fields",
+      }),
+    ).toBeFocused();
+    await page.keyboard.press("Tab");
+    await page.keyboard.press("Enter");
+    await expect(page.locator("#synthetic-contact")).toBeFocused();
+  });
+
+  test("language combobox keeps active descendant safe when no options match", async ({
+    page,
+  }) => {
+    await page.goto("/design-system");
+    const search = page.getByRole("combobox", { name: "Language" });
+    await search.fill("no language matches this");
+    await expect(search).not.toHaveAttribute("aria-activedescendant");
+    await page.keyboard.press("ArrowDown");
+    await expect(search).not.toHaveAttribute("aria-activedescendant");
   });
 
   test("320px viewport has no body overflow and keeps controls reachable", async ({
@@ -46,7 +92,7 @@ test.describe("Civic Calm design-system verification", () => {
     expect(dimensions.body).toBeLessThanOrEqual(dimensions.viewport);
     await expect(page.getByRole("button", { name: "Continue" })).toBeVisible();
     await expect(
-      page.getByRole("searchbox", { name: "Language" }),
+      page.getByRole("combobox", { name: "Language" }),
     ).toBeVisible();
   });
 

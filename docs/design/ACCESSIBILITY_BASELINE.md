@@ -8,8 +8,9 @@ The engineering baseline targets WCAG 2.2 Level AA and prepares the architecture
 
 - Every interactive primitive must work without a pointer.
 - Focus order follows DOM/task order; positive `tabindex` is prohibited.
-- Enter/Space use native control behavior; tabs use Left/Right arrows; Escape closes the native dialog.
+- Enter/Space use native control behavior; tabs use Left/Right/Home/End movement; Escape closes the native dialog.
 - Closing a dialog restores focus to its trigger.
+- Opening a dialog places focus inside it. Tooltips compose onto the existing trigger and never add a wrapper tab stop.
 - A visible skip link moves directly to the focusable main landmark.
 
 ## Focus policy
@@ -18,7 +19,7 @@ One high-contrast focus token (`--focus`) produces a 3px ring with separation fr
 
 ## Screen-reader and semantic policy
 
-Use native elements and landmarks first. FormField creates label/help/error relationships. Important persistent errors use alert semantics; ordinary state updates use polite live regions. Decorative icons are `aria-hidden`; icon-only controls require an accessible name. Critical safety or legal information must not be placed only in transient toasts.
+Use native elements and landmarks first. FormField creates label/help/error relationships, preserves consumer descriptors, and synchronizes compatible native `required` state. ErrorSummary focuses its heading once per changed error set and links to invalid controls; `focusFirstInvalid` provides a reusable recovery helper. LanguageSelector uses an editable combobox/listbox relationship with stable active-descendant state. Important persistent errors use alert semantics; ordinary state updates use polite live regions. Decorative icons are `aria-hidden`; icon-only controls require an accessible name. Critical safety or legal information must not be placed only in transient toasts.
 
 ## Contrast and color
 
@@ -42,8 +43,8 @@ Buttons, controls, badges, alerts, assessment states, focus indicators, and load
 
 ## Automated coverage
 
-- Vitest: loading/disabled button semantics, FormField associations, status labels, language filtering/selection, dialog behavior, and required token contract.
-- Playwright: skip link and keyboard path, form entry, language operation, dialog open/Escape/focus restoration, 320×700 overflow, 1440×900 bounds, RTL clipping, and reduced motion.
+- Vitest: loading/disabled button semantics, FormField associations and descriptor preservation, required state, tooltip relationship, error-summary recovery, first-invalid focus, language active-descendant behavior, tabs Home/End/empty state, dialog behavior, and required token contract.
+- Playwright: skip link and keyboard path, tooltip single-stop behavior, invalid-form error-link recovery, combobox empty-result safety, form entry, language operation, dialog initial/Escape/focus restoration, 320×700 overflow, 1440×900 bounds, RTL clipping, and reduced motion.
 - Axe: homepage and design-system component groups; zero automated serious/critical violations required.
 
 ## Required manual follow-up

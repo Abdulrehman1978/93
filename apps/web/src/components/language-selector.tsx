@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useMemo, useState, type KeyboardEvent } from "react";
+import { useEffect, useId, useMemo, useState, type KeyboardEvent } from "react";
 import { Check, Languages, Search } from "lucide-react";
 import { cn } from "@/lib/cn";
 
@@ -46,10 +46,23 @@ export function LanguageSelector({
         .includes(normalized),
     );
   }, [languages, query]);
+  const safeActiveIndex =
+    filtered.length === 0
+      ? -1
+      : Math.min(Math.max(activeIndex, 0), filtered.length - 1);
+
+  useEffect(() => {
+    setActiveIndex((current) =>
+      filtered.length === 0
+        ? -1
+        : Math.min(Math.max(current, 0), filtered.length - 1),
+    );
+  }, [filtered]);
 
   const choose = (language: LanguageOption) => {
     setSelected(language.code);
     setQuery("");
+    setActiveIndex(0);
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -59,13 +72,20 @@ export function LanguageSelector({
     ) {
       event.preventDefault();
       const delta = event.key === "ArrowDown" ? 1 : -1;
-      setActiveIndex(
-        (current) => (current + delta + filtered.length) % filtered.length,
-      );
+      setActiveIndex(() => {
+        const current =
+          safeActiveIndex < 0 ? (delta > 0 ? -1 : 0) : safeActiveIndex;
+        return (current + delta + filtered.length) % filtered.length;
+      });
     }
-    if (event.key === "Enter" && filtered[activeIndex]) {
+    if (event.key === "Enter" && filtered[safeActiveIndex]) {
       event.preventDefault();
-      choose(filtered[activeIndex]);
+      choose(filtered[safeActiveIndex]);
+    }
+    if (event.key === "Escape" && query) {
+      event.preventDefault();
+      setQuery("");
+      setActiveIndex(0);
     }
   };
 
@@ -98,11 +118,23 @@ export function LanguageSelector({
             setActiveIndex(0);
           }}
           onKeyDown={onKeyDown}
-          aria-controls={listId}
+          role="combobox"
           aria-autocomplete="list"
+          aria-expanded="true"
+          aria-controls={listId}
+          aria-activedescendant={
+            safeActiveIndex >= 0
+              ? `${listId}-option-${filtered[safeActiveIndex].code}`
+              : undefined
+          }
+          aria-describedby={`${listId}-help`}
           placeholder="Search languages"
         />
       </div>
+      <p id={`${listId}-help`} className="language-selector__help">
+        Options stay visible while you search. Use Up and Down to move, Enter to
+        select, or Escape to clear the search.
+      </p>
       <ul
         id={listId}
         role="listbox"
@@ -114,8 +146,9 @@ export function LanguageSelector({
             <button
               type="button"
               role="option"
+              id={`${listId}-option-${language.code}`}
               aria-selected={selected === language.code}
-              className={cn(index === activeIndex && "is-active")}
+              className={cn(index === safeActiveIndex && "is-active")}
               onClick={() => choose(language)}
             >
               <span dir={language.direction}>{language.nativeName}</span>

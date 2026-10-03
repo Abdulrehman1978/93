@@ -489,6 +489,44 @@ p {
   font-size: 0.875rem;
   font-weight: 650;
 }
+.error-summary {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: 2px solid var(--danger);
+  border-radius: var(--radius-md);
+  background: var(--surface-subtle);
+}
+.error-summary h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+.error-summary h2:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+.error-summary ul {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding-inline-start: var(--space-5);
+}
+.error-summary a {
+  color: var(--danger);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+.error-recovery-demo {
+  padding: var(--space-5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+}
+.form-demo__note {
+  margin: 0;
+  color: var(--foreground-muted);
+}
 .control {
   width: 100%;
   min-height: 2.75rem;
@@ -917,9 +955,13 @@ progress {
   width: 1.1rem;
 }
 .language-selector__selected,
-.language-selector__truth {
+.language-selector__truth,
+.language-selector__help {
   color: var(--foreground-muted);
   font-size: 0.82rem;
+}
+.language-selector__help {
+  margin: 0;
 }
 .language-selector__search {
   position: relative;

@@ -57,21 +57,21 @@ export const Button = forwardRef<
   );
 });
 
-export function IconButton({
-  label,
-  variant = "quiet",
-  size = "md",
-  children,
-  className,
-  ...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & {
-  label: string;
-  variant?: ButtonVariant;
-  size?: ButtonSize;
-  children: ReactNode;
-}) {
+export const IconButton = forwardRef<
+  HTMLButtonElement,
+  ButtonHTMLAttributes<HTMLButtonElement> & {
+    label: string;
+    variant?: ButtonVariant;
+    size?: ButtonSize;
+    children: ReactNode;
+  }
+>(function IconButton(
+  { label, variant = "quiet", size = "md", children, className, ...props },
+  ref,
+) {
   return (
     <button
+      ref={ref}
       className={cn(buttonClass(variant, size, className), "button--icon")}
       aria-label={label}
       {...props}
@@ -80,7 +80,7 @@ export function IconButton({
       <VisuallyHidden>{label}</VisuallyHidden>
     </button>
   );
-}
+});
 
 export function LinkButton({
   variant = "primary",

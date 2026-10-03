@@ -20,7 +20,16 @@ export function Tabs({ items, label }: { items: TabItem[]; label: string }) {
   const baseId = useId();
   const refs = useRef<Array<HTMLButtonElement | null>>([]);
 
+  if (items.length === 0) return null;
+
   const move = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
+    if (event.key === "Home" || event.key === "End") {
+      event.preventDefault();
+      const next = event.key === "Home" ? 0 : items.length - 1;
+      setActiveId(items[next].id);
+      refs.current[next]?.focus();
+      return;
+    }
     const direction =
       event.key === "ArrowRight" ? 1 : event.key === "ArrowLeft" ? -1 : 0;
     if (!direction) return;

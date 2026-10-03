@@ -99,6 +99,15 @@ Indic scripts have fallback support but not complete linguistic or script-by-scr
 
 Packet 06 remains `NOT_STARTED`. No channel gateway, consent engine, database feature, authorization rewrite, speech integration, or live AI work is included. Packet 06 must not begin before explicit owner approval of Packet 05.
 
+## Packet 05R remediation closure
+
+Packet 05R closes the owner-requested accessibility remediation without redesigning the Civic Calm system or changing the backend/security architecture. The historical Packet 05 implementation evidence remains:
+
+- Implementation commit: `61b7e373abfd4f8a4d3779d129eead451fdf4de7`
+- Implementation CI: `37120152798` — SUCCESS
+- Evidence closure: `d955848cebab54526b4154ca2115202b0c1aa6c2`
+- Final closure CI: `37120249513` — SUCCESS
+
 ## Repository evidence
 
 - Implementation commit: `61b7e373abfd4f8a4d3779d129eead451fdf4de7`
