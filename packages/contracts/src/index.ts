@@ -403,7 +403,12 @@ export const ChannelSessionCreateSchema = z.object({
     .min(2)
     .max(20)
     .default("en"),
-  client_request_id: z.string().min(1).max(255).optional(),
+  client_request_id: z
+    .string()
+    .regex(/^[A-Za-z0-9._:-]{1,80}$/)
+    .min(1)
+    .max(80)
+    .optional(),
 });
 export type ChannelSessionCreate = z.infer<typeof ChannelSessionCreateSchema>;
 
@@ -446,6 +451,7 @@ export const ConsentRequirementSchema = z.object({
   purpose_code: z.string(),
   name: z.string(),
   lawful_basis: z.string(),
+  allowed_lawful_authorities: z.array(z.string()).default([]),
   consent_mode: ConsentModeSchema,
   notice_required: z.boolean(),
   notice_version: z.string(),
@@ -468,10 +474,26 @@ export const ConsentDecisionRequestSchema = z.object({
     .max(50),
   choice: ConsentChoiceSchema,
   policy_version: z.string().min(1).max(80),
-  client_action_id: z.string().min(1).max(255),
+  client_action_id: z
+    .string()
+    .regex(/^[A-Za-z0-9._:-]{1,80}$/)
+    .min(1)
+    .max(80),
 });
 export type ConsentDecisionRequest = z.infer<
   typeof ConsentDecisionRequestSchema
+>;
+
+export const IntakeAcknowledgementRequestSchema = z.object({
+  policy_version: z.string().min(1).max(80),
+  client_action_id: z
+    .string()
+    .regex(/^[A-Za-z0-9._:-]{1,80}$/)
+    .min(1)
+    .max(80),
+});
+export type IntakeAcknowledgementRequest = z.infer<
+  typeof IntakeAcknowledgementRequestSchema
 >;
 
 export const ConsentReceiptSchema = z.object({

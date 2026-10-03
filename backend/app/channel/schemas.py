@@ -38,7 +38,9 @@ class ChannelSessionCreate(BaseModel):
     channel: ChannelType = ChannelType.WEB
     interaction_mode: InteractionMode = InteractionMode.UNSELECTED
     locale: str = Field(default="en", min_length=2, max_length=20, pattern=r"^[A-Za-z-]+$")
-    client_request_id: str | None = Field(default=None, min_length=1, max_length=255)
+    client_request_id: str | None = Field(
+        default=None, min_length=1, max_length=80, pattern=r"^[A-Za-z0-9._:-]{1,80}$"
+    )
 
 
 class ChannelSessionResponse(BaseModel):
@@ -76,6 +78,7 @@ class ConsentRequirement(BaseModel):
     purpose_code: str
     name: str
     lawful_basis: str
+    allowed_lawful_authorities: tuple[str, ...] = ()
     consent_mode: ConsentMode
     notice_required: bool
     notice_version: str
@@ -107,7 +110,14 @@ class ConsentDecisionRequest(BaseModel):
     purpose_code: str = Field(min_length=1, max_length=50, pattern=r"^[A-Z0-9-]+$")
     choice: ConsentChoice
     policy_version: str = Field(min_length=1, max_length=80)
-    client_action_id: str = Field(min_length=1, max_length=255)
+    client_action_id: str = Field(min_length=1, max_length=80, pattern=r"^[A-Za-z0-9._:-]{1,80}$")
+
+
+class IntakeAcknowledgementRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    policy_version: str = Field(min_length=1, max_length=80)
+    client_action_id: str = Field(min_length=1, max_length=80, pattern=r"^[A-Za-z0-9._:-]{1,80}$")
 
 
 class ConsentReceipt(BaseModel):

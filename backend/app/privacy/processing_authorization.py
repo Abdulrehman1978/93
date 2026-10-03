@@ -18,6 +18,8 @@ from app.db.models.governance import (
 from app.db.models.platform import AuditEvent
 from app.errors import AppException
 from app.privacy.policies import ensure_packet06_catalog, resolve_purpose
+from app.security.authorization import AuthorizationService
+from app.security.context import AuthorizationContext
 from app.security.principal import SecurityPrincipal
 
 
@@ -60,26 +62,25 @@ async def create_interaction_authorization(
     emergency_authority: str | None = None,
 ) -> ProcessingAuthorization:
     policy = resolve_purpose(purpose_code)
-    if policy.consent_mode in {ConsentMode.REQUIRED, ConsentMode.OPTIONAL}:
+    if emergency_authority is None and policy.consent_mode in {
+        ConsentMode.REQUIRED,
+        ConsentMode.OPTIONAL,
+    }:
         raise AppException(
             409,
             "Consent required",
             "This purpose must be authorized through the consent ledger.",
             "https://api.sambal.gov.in/errors/consent-required",
         )
-    if policy.human_approval_required:
-        if (
-            actor is None
-            or actor.actor_type not in {"STAFF", "AUDITOR"}
-            or "SUPERVISOR" not in actor.roles
-        ):
+    if emergency_authority is not None or policy.human_approval_required:
+        if actor is None or actor.actor_type != "STAFF" or interaction.case_id is None:
             raise AppException(
                 403,
                 "Human authorization required",
                 "This purpose requires an active human supervisor.",
                 "https://api.sambal.gov.in/errors/human-authorization-required",
             )
-        if emergency_authority not in {"MEDICAL_EMERGENCY", "PUBLIC_ORDER_OR_DISASTER_ASSISTANCE"}:
+        if emergency_authority not in policy.allowed_lawful_authorities:
             raise AppException(
                 400,
                 "Invalid emergency authority",
@@ -101,13 +102,40 @@ async def create_interaction_authorization(
                 "https://api.sambal.gov.in/errors/policy-unavailable",
             )
         authority_row = emergency_authority_row
+    if authority_row.authority_code not in policy.allowed_lawful_authorities:
+        raise AppException(
+            400,
+            "Invalid authority",
+            "The authority is not permitted for this purpose.",
+            "https://api.sambal.gov.in/errors/invalid-authority",
+        )
+    if actor is not None:
+        if interaction.case_id is None or actor.actor_type != "STAFF":
+            raise AppException(
+                403,
+                "Human authorization required",
+                "Only an active staff principal may authorize this purpose.",
+                "https://api.sambal.gov.in/errors/human-authorization-required",
+            )
+        await AuthorizationService().authorize_or_raise(
+            actor,
+            "processing_authorization.manage",
+            AuthorizationContext.for_resource(
+                "case",
+                interaction.case_id,
+                purpose=purpose_code,
+                correlation_id=f"processing-authorization:{interaction.id}",
+            ),
+            session,
+        )
     authorization = ProcessingAuthorization(
+        case_id=interaction.case_id if actor is not None else None,
         interaction_id=interaction.id,
         processing_purpose_id=purpose_row.id,
         authority_type_id=authority_row.id,
         actor_id=actor.actor_id if actor else None,
         authorization_reason=(
-            "Human supervisor authorized narrowly scoped emergency processing."
+            "Human staff principal authorized a documented lawful processing authority."
             if actor
             else "Information was voluntarily provided for the specified intake purpose."
         ),
@@ -149,6 +177,7 @@ async def promote_interaction_authorizations_to_case(
                 ProcessingAuthorization.case_id == case_id,
                 ProcessingAuthorization.processing_purpose_id
                 == authorization.processing_purpose_id,
+                ProcessingAuthorization.authority_type_id == authorization.authority_type_id,
                 ProcessingAuthorization.status == "ACTIVE",
             )
         )

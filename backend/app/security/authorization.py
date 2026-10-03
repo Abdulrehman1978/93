@@ -225,7 +225,11 @@ class AuthorizationService:
                 return await self._decision(
                     principal, action, context, session, False, "RESOURCE_CASE_REQUIRED"
                 )
-            if not await self._purpose_authorized(scope.case_id, context, session):
+            # Creating the authorization that will satisfy a purpose check is a
+            # deliberate exception to the otherwise recursive sensitive-read rule.
+            if action != "processing_authorization.manage" and not await self._purpose_authorized(
+                scope.case_id, context, session
+            ):
                 return await self._decision(
                     principal, action, context, session, False, "PURPOSE_NOT_AUTHORIZED"
                 )

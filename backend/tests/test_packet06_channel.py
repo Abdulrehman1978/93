@@ -12,7 +12,12 @@ from app.channel.registry import (
     InteractionMode,
     get_channel_capability,
 )
-from app.channel.schemas import ChannelSessionCreate, ConsentChoice, ConsentDecisionRequest
+from app.channel.schemas import (
+    ChannelSessionCreate,
+    ConsentChoice,
+    ConsentDecisionRequest,
+    IntakeAcknowledgementRequest,
+)
 from app.channel.session import ChannelSessionService, token_digest
 from app.database import engine
 from app.db.models.casework import Interaction, InteractionEvent
@@ -57,11 +62,37 @@ async def test_session_consent_is_append_only_and_idempotent() -> None:
             assert interaction is not None
             assert interaction.session_token_digest == token_digest(created.session_token)
             assert created.session_token not in str(interaction.channel_metadata)
+            assert (
+                await session.scalar(
+                    select(ProcessingAuthorization.id).where(
+                        ProcessingAuthorization.interaction_id == created.session_id
+                    )
+                )
+                is None
+            )
 
             policy = await engine_service.present_policy(session, interaction)
             assert policy.served_locale == "en"
             assert policy.translation_status.value == "FALLBACK_LANGUAGE"
             assert any(item.purpose_code == "PURP-08" for item in policy.optional_consents)
+
+            await engine_service.acknowledge_intake(
+                session,
+                created.session_id,
+                created.session_token,
+                IntakeAcknowledgementRequest(
+                    policy_version=policy.policy_version,
+                    client_action_id="packet06-intake-continue",
+                ),
+            )
+            intake_auth = (
+                await session.scalars(
+                    select(ProcessingAuthorization).where(
+                        ProcessingAuthorization.interaction_id == created.session_id
+                    )
+                )
+            ).all()
+            assert len(intake_auth) == 1
 
             grant = await engine_service.record(
                 session,
@@ -87,6 +118,27 @@ async def test_session_consent_is_append_only_and_idempotent() -> None:
             )
             assert grant.consent_event_id == duplicate.consent_event_id
             assert grant.current_processing_authorized is True
+            second_grant = await engine_service.record(
+                session,
+                created.session_id,
+                created.session_token,
+                ConsentDecisionRequest(
+                    purpose_code="PURP-08",
+                    choice=ConsentChoice.GRANTED,
+                    policy_version=policy.policy_version,
+                    client_action_id="packet06-consent-1b",
+                ),
+            )
+            assert second_grant.current_processing_authorized is True
+            active_authorizations = (
+                await session.scalars(
+                    select(ProcessingAuthorization).where(
+                        ProcessingAuthorization.interaction_id == created.session_id,
+                        ProcessingAuthorization.status == "ACTIVE",
+                    )
+                )
+            ).all()
+            assert len(active_authorizations) == 2
 
             with pytest.raises(AppException) as conflict:
                 await engine_service.record(

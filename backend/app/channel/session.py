@@ -23,10 +23,7 @@ from app.config import settings
 from app.db.models.casework import Case, Interaction, InteractionEvent, Subject
 from app.db.models.platform import AuditEvent
 from app.errors import AppException
-from app.privacy.processing_authorization import (
-    create_interaction_authorization,
-    promote_interaction_authorizations_to_case,
-)
+from app.privacy.processing_authorization import promote_interaction_authorizations_to_case
 
 
 def token_digest(token: str) -> str:
@@ -96,11 +93,6 @@ class ChannelSessionService:
             external_reference=request.client_request_id,
             channel_metadata={
                 "protocol_version": "packet-06-v1",
-                **(
-                    {"client_request_id": request.client_request_id}
-                    if request.client_request_id
-                    else {}
-                ),
             },
             session_token_digest=token_digest(raw_token),
             session_expires_at=now + timedelta(seconds=settings.SESSION_TTL_SECONDS),
@@ -133,7 +125,6 @@ class ChannelSessionService:
             )
         )
         await session.flush()
-        await create_interaction_authorization(session, interaction, "PURP-01")
         assert interaction.session_expires_at is not None
         return ChannelSessionResponse(
             session_id=interaction_id,
@@ -285,6 +276,8 @@ class ChannelSessionService:
                 "The interaction is already bound to a different case.",
                 "https://api.sambal.gov.in/errors/interaction-bound",
             )
+        if interaction.case_id == case_id:
+            return interaction
         interaction.case_id = case_id
         await promote_interaction_authorizations_to_case(session, interaction, case_id)
         session.add(
@@ -294,6 +287,14 @@ class ChannelSessionService:
                 occurred_at=datetime.now(UTC),
                 source_reference=f"case:{case_id}",
                 event_metadata={"case_id": str(case_id)},
+            )
+        )
+        session.add(
+            AuditEvent(
+                action="CHANNEL_SESSION_CASE_BOUND",
+                entity_type="interaction",
+                entity_id=str(interaction.id),
+                safe_metadata={"case_id": str(case_id)},
             )
         )
         await session.flush()

@@ -37,6 +37,8 @@ Initial local evidence is recorded in the commit/CI closure below. The result re
 - Frontend: Prettier, contracts/web typecheck, lint, unit tests, production build, Playwright, and accessibility suite.
 - Commit: `867f93218b7cf2f0b63582422b96e2279b5358e8`
 - CI run: [37124594282 — SUCCESS](https://github.com/Abdulrehman1978/93/actions/runs/37124594282)
+- Final Packet 06 documentation HEAD: `ff88452e05dc27803cb14d029779329c41215b4a`
+- Final Packet 06 baseline CI: [37124697700 — SUCCESS](https://github.com/Abdulrehman1978/93/actions/runs/37124697700)
 
 ## Transition gate
 

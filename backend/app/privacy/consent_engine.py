@@ -8,12 +8,14 @@ from datetime import UTC, datetime
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.channel.registry import all_channel_capabilities
+from app.channel.registry import InteractionMode, all_channel_capabilities
 from app.channel.schemas import (
     ChannelCapabilityResponse,
     ConsentChoice,
     ConsentDecisionRequest,
     ConsentReceipt,
+    IntakeAcknowledgementRequest,
+    SessionControlResponse,
     SessionPolicyResponse,
     TranslationTruthStatus,
 )
@@ -33,6 +35,7 @@ from app.privacy.policies import (
     ensure_packet06_catalog,
     resolve_purpose,
 )
+from app.privacy.processing_authorization import create_interaction_authorization
 
 
 def _translation(locale: str | None) -> tuple[str, TranslationTruthStatus]:
@@ -144,6 +147,13 @@ class ConsentEngine:
                 "This purpose cannot be authorized through anonymous consent.",
                 "https://api.sambal.gov.in/errors/consent-not-applicable",
             )
+        if request.purpose_code == "PURP-02" and interaction.interaction_mode != "VOICE":
+            raise AppException(
+                409,
+                "Voice mode required",
+                "Speech transcription requires an intentional voice interaction.",
+                "https://api.sambal.gov.in/errors/voice-mode-required",
+            )
         purpose = await session.scalar(
             select(ProcessingPurpose).where(ProcessingPurpose.purpose_code == request.purpose_code)
         )
@@ -238,17 +248,32 @@ class ConsentEngine:
                     "The consent authority is not configured.",
                     "https://api.sambal.gov.in/errors/policy-unavailable",
                 )
-            session.add(
-                ProcessingAuthorization(
-                    interaction_id=interaction.id,
-                    case_id=interaction.case_id,
-                    processing_purpose_id=purpose.id,
-                    authority_type_id=authority.id,
-                    consent_event_id=event.id,
-                    authorization_reason="Purpose-specific consent recorded in the append-only ledger.",
-                    policy_version_id=policy.id,
+            active_consent = await session.scalar(
+                select(ProcessingAuthorization.id)
+                .join(
+                    ProcessingAuthorityType,
+                    ProcessingAuthorityType.id == ProcessingAuthorization.authority_type_id,
                 )
+                .where(
+                    ProcessingAuthorization.interaction_id == interaction.id,
+                    ProcessingAuthorization.processing_purpose_id == purpose.id,
+                    ProcessingAuthorization.status == "ACTIVE",
+                    ProcessingAuthorityType.authority_code == "CONSENT",
+                )
+                .with_for_update()
             )
+            if active_consent is None:
+                session.add(
+                    ProcessingAuthorization(
+                        interaction_id=interaction.id,
+                        case_id=interaction.case_id,
+                        processing_purpose_id=purpose.id,
+                        authority_type_id=authority.id,
+                        consent_event_id=event.id,
+                        authorization_reason="Purpose-specific consent recorded in the append-only ledger.",
+                        policy_version_id=policy.id,
+                    )
+                )
         elif request.choice is ConsentChoice.REVOKED:
             active = (
                 await session.scalars(
@@ -257,6 +282,8 @@ class ConsentEngine:
                         ProcessingAuthorization.interaction_id == interaction.id,
                         ProcessingAuthorization.processing_purpose_id == purpose.id,
                         ProcessingAuthorization.status == "ACTIVE",
+                        ProcessingAuthorization.authority_type_id == ProcessingAuthorityType.id,
+                        ProcessingAuthorityType.authority_code == "CONSENT",
                     )
                     .with_for_update()
                 )
@@ -294,6 +321,89 @@ class ConsentEngine:
         await session.flush()
         return await self._receipt(session, event, request.purpose_code)
 
+    async def acknowledge_intake(
+        self,
+        session: AsyncSession,
+        session_id: uuid.UUID,
+        raw_token: str,
+        request: IntakeAcknowledgementRequest,
+    ) -> SessionControlResponse:
+        interaction = await self.sessions.authenticate(session, session_id, raw_token, mutate=True)
+        policy = await ensure_packet06_catalog(session)
+        if request.policy_version != policy.version_code:
+            raise AppException(
+                409,
+                "Policy version stale",
+                "Reload the current notice before continuing.",
+                "https://api.sambal.gov.in/errors/policy-version-stale",
+            )
+        source = f"intake-continue:{request.client_action_id}"
+        existing = await session.scalar(
+            select(InteractionEvent).where(
+                InteractionEvent.interaction_id == interaction.id,
+                InteractionEvent.source_reference == source,
+            )
+        )
+        if existing is None:
+            notice = await session.scalar(
+                select(InteractionEvent).where(
+                    InteractionEvent.interaction_id == interaction.id,
+                    InteractionEvent.event_type == "NOTICE_PRESENTED",
+                    InteractionEvent.source_reference == f"notice:PURP-01:{policy.version_code}",
+                )
+            )
+            if notice is None:
+                raise AppException(
+                    409,
+                    "Notice required",
+                    "The intake notice must be presented before continuing.",
+                    "https://api.sambal.gov.in/errors/notice-required",
+                )
+            now = datetime.now(UTC)
+            session.add(
+                InteractionEvent(
+                    interaction_id=interaction.id,
+                    event_type="INTAKE_CONTINUE_CONFIRMED",
+                    occurred_at=now,
+                    source_reference=source,
+                    event_metadata={
+                        "purpose_code": "PURP-01",
+                        "policy_version": policy.version_code,
+                    },
+                )
+            )
+            existing_auth = await session.scalar(
+                select(ProcessingAuthorization.id)
+                .join(
+                    ProcessingAuthorityType,
+                    ProcessingAuthorityType.id == ProcessingAuthorization.authority_type_id,
+                )
+                .where(
+                    ProcessingAuthorization.interaction_id == interaction.id,
+                    ProcessingAuthorityType.authority_code
+                    == "VOLUNTARILY_PROVIDED_FOR_SPECIFIED_PURPOSE",
+                    ProcessingAuthorization.status == "ACTIVE",
+                )
+            )
+            if existing_auth is None:
+                await create_interaction_authorization(session, interaction, "PURP-01")
+            session.add(
+                AuditEvent(
+                    action="INTAKE_CONTINUE_CONFIRMED",
+                    entity_type="interaction",
+                    entity_id=str(interaction.id),
+                    purpose="PURP-01",
+                    policy_version_id=policy.id,
+                    safe_metadata={"client_action_id": request.client_action_id},
+                )
+            )
+            await session.flush()
+        return SessionControlResponse(
+            session_id=interaction.id,
+            status=interaction.status,
+            interaction_mode=InteractionMode(interaction.interaction_mode),
+        )
+
     async def _current_decisions(
         self, session: AsyncSession, interaction_id: uuid.UUID
     ) -> dict[str, ConsentChoice]:
@@ -323,9 +433,16 @@ class ConsentEngine:
         if event.choice == "GRANTED":
             authorized = (
                 await session.scalar(
-                    select(ProcessingAuthorization.id).where(
-                        ProcessingAuthorization.consent_event_id == event.id,
+                    select(ProcessingAuthorization.id)
+                    .join(
+                        ProcessingAuthorityType,
+                        ProcessingAuthorityType.id == ProcessingAuthorization.authority_type_id,
+                    )
+                    .where(
+                        ProcessingAuthorization.interaction_id == event.interaction_id,
+                        ProcessingAuthorization.processing_purpose_id == event.purpose_id,
                         ProcessingAuthorization.status == "ACTIVE",
+                        ProcessingAuthorityType.authority_code == "CONSENT",
                     )
                 )
             ) is not None

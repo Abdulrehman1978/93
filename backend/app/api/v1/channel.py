@@ -15,6 +15,7 @@ from app.channel.schemas import (
     ChannelSessionResponse,
     ConsentDecisionRequest,
     ConsentReceipt,
+    IntakeAcknowledgementRequest,
     ModeSelectionRequest,
     SessionControlResponse,
     SessionPolicyResponse,
@@ -85,6 +86,18 @@ async def record_consent(
     receipt = await consent_engine.record(db, session_id, token or "", request)
     await db.commit()
     return receipt
+
+
+@router.post("/sessions/{session_id}/intake/continue", response_model=SessionControlResponse)
+async def continue_intake(
+    session_id: uuid.UUID,
+    request: IntakeAcknowledgementRequest,
+    db: DbSession,
+    token: SessionToken,
+) -> SessionControlResponse:
+    response = await consent_engine.acknowledge_intake(db, session_id, token or "", request)
+    await db.commit()
+    return response
 
 
 @router.post("/sessions/{session_id}/mode", response_model=SessionControlResponse)
