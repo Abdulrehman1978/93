@@ -20,5 +20,8 @@
   },
   "devDependencies": {
     "prettier": "^3.3.3"
+  },
+  "overrides": {
+    "braces": "^3.0.3"
   }
 }

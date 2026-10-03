@@ -16,8 +16,6 @@ RUN npm ci
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/packages/contracts/node_modules ./packages/contracts/node_modules
-COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
 
 COPY packages/contracts/ ./packages/contracts/
 COPY apps/web/ ./apps/web/

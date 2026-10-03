@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:16-alpine
+        image: postgres:16.15-alpine
         env:
           POSTGRES_USER: sambal_user
           POSTGRES_PASSWORD: sambal_secure_pass
@@ -36,27 +36,27 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@v3
         with:
-          version: "latest"
+          version: "0.12.17"
 
-      - name: Install backend dependencies
+      - name: Install backend dependencies from frozen lock
         run: |
           cd backend
-          uv pip install --system -e ".[dev]"
+          uv sync --frozen --all-extras
 
       - name: Ruff Format Check
         run: |
           cd backend
-          ruff format --check .
+          uv run ruff format --check .
 
       - name: Ruff Lint Check
         run: |
           cd backend
-          ruff check .
+          uv run ruff check .
 
       - name: Mypy Strict Type Check
         run: |
           cd backend
-          mypy app
+          uv run mypy app
 
       - name: Run Backend Unit & Integration Tests
         env:
@@ -64,12 +64,12 @@ jobs:
           ENVIRONMENT: testing
         run: |
           cd backend
-          pytest -v --cov=app
+          uv run pytest -v --cov=app
 
       - name: Verify OpenAPI Schema Generation
         run: |
           cd backend
-          python -c "from app.main import app; schema = app.openapi(); assert len(schema['paths']) > 0; print('OpenAPI paths:', len(schema['paths']))"
+          uv run python -c "from app.main import app; schema = app.openapi(); assert len(schema['paths']) > 0; print('OpenAPI paths:', len(schema['paths']))"
 
   frontend-quality-gates:
     name: Frontend Quality Gates (Next.js & Shared Contracts)
@@ -96,7 +96,7 @@ jobs:
       - name: Strict Typecheck (Contracts & Web)
         run: npm run typecheck
 
-      - name: Next.js ESLint
+      - name: Direct ESLint Check
         run: npm run lint
 
       - name: Vitest Unit & Component Tests
@@ -112,7 +112,7 @@ jobs:
         run: npm run test:e2e
 
   security-scan:
-    name: Security & Secret Scan
+    name: Security, Secrets & Dependency Vulnerability Gates
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -124,3 +124,32 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          log-opts: "--all"
+
+      - name: Set up Node.js 24
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: JavaScript Dependency Vulnerability Audit (Production)
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "0.12.17"
+
+      - name: Python Dependency Vulnerability Audit (pip-audit)
+        run: |
+          cd backend
+          uv run --with pip-audit pip-audit

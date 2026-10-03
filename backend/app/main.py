@@ -9,6 +9,7 @@ Follows V3 Lean-Core Architecture:
 - External / Government Provider Adapters
 """
 
+import asyncio
 import time
 import uuid
 from collections.abc import AsyncGenerator
@@ -24,6 +25,7 @@ from app.config import settings
 from app.database import dispose_database
 from app.errors import register_error_handlers
 from app.logging import correlation_id_ctx, logger, setup_logging
+from app.storage import ensure_bucket_exists
 
 
 @asynccontextmanager
@@ -34,6 +36,8 @@ async def lifespan(_app: FastAPI) -> AsyncGenerator[None, None]:
         f"Starting {settings.PROJECT_NAME} v{settings.VERSION} "
         f"[env={settings.ENVIRONMENT}, debug={settings.DEBUG}]"
     )
+    if settings.ENVIRONMENT in ("development", "testing"):
+        await asyncio.to_thread(ensure_bucket_exists)
     yield
     logger.info("Shutting down SAMBAL Backend...")
     await dispose_database()

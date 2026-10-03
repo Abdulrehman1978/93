@@ -16,7 +16,7 @@ export async function GET() {
     dependencies: {
       frontend_runtime: {
         status: "healthy",
-        details: "Next.js 14 App Router operational",
+        details: "Next.js 16 Active-LTS App Router operational",
       },
     },
   };

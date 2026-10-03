@@ -17,9 +17,7 @@ test.describe("SAMBAL Web Shell Smoke Tests", () => {
 
     // Verify main heading content
     const h1 = page.locator("h1");
-    await expect(h1).toContainText(
-      "SAMBAL Real-Time Multilingual Trauma-Aware",
-    );
+    await expect(h1).toContainText("SAMBAL Intelligence & Response Layer");
 
     // Verify header branding
     await expect(page.locator("header")).toContainText(

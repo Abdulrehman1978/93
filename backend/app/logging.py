@@ -1,7 +1,9 @@
 """Structured JSON Logging with PII Redaction and Correlation ID context.
 
-Provides zero-leakage logging for citizen PII (phones, Aadhaar, emails)
-and propagates request correlation IDs across async task boundaries.
+Provides baseline regex redaction for common identifiers (phone, Aadhaar, email)
+with defensive structural sanitization and strict allowlisting of sensitive domains.
+Regex redaction alone is not zero-leakage; high-risk citizen domains (narratives,
+transcripts, raw inputs, identity docs) are omitted by policy.
 """
 
 import datetime
@@ -19,6 +21,25 @@ AADHAAR_PATTERN = re.compile(r"\b\d{4}\s?\d{4}\s?\d{4}\b")
 INDIAN_PHONE_PATTERN = re.compile(r"(?:\+91[-\s]?)?\b[6-9]\d{9}\b")
 EMAIL_PATTERN = re.compile(r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b")
 
+# Prohibited keys: citizen narratives, raw speech, credentials, identity docs
+PROHIBITED_LOG_KEYS = {
+    "transcript",
+    "narrative",
+    "citizen_narrative",
+    "citizen_input",
+    "raw_model_input",
+    "raw_input",
+    "address",
+    "identity_document",
+    "id_document",
+    "request_body",
+    "body",
+    "password",
+    "secret",
+    "token",
+    "authorization",
+}
+
 
 def redact_pii(text: str) -> str:
     """Redact sensitive PII elements from log messages."""
@@ -26,6 +47,24 @@ def redact_pii(text: str) -> str:
     text = INDIAN_PHONE_PATTERN.sub("[REDACTED_PHONE]", text)
     text = EMAIL_PATTERN.sub("[REDACTED_EMAIL]", text)
     return text
+
+
+def sanitize_structure(val: Any) -> Any:
+    """Recursively sanitize nested dictionaries and lists, omitting prohibited keys."""
+    if isinstance(val, dict):
+        sanitized_dict: dict[str, Any] = {}
+        for k, v in val.items():
+            key_lower = str(k).lower().strip()
+            if any(prohibited in key_lower for prohibited in PROHIBITED_LOG_KEYS):
+                sanitized_dict[k] = "[PROHIBITED_SENSITIVE_FIELD_OMITTED]"
+            else:
+                sanitized_dict[k] = sanitize_structure(v)
+        return sanitized_dict
+    elif isinstance(val, list):
+        return [sanitize_structure(item) for item in val]
+    elif isinstance(val, str):
+        return redact_pii(val)
+    return val
 
 
 class StructuredJsonFormatter(logging.Formatter):
@@ -47,15 +86,21 @@ class StructuredJsonFormatter(logging.Formatter):
         }
 
         if record.exc_info:
-            log_data["exception"] = self.formatException(record.exc_info)
+            raw_exc = self.formatException(record.exc_info)
+            # Mask potential connection URI credentials before email regex
+            masked_exc = re.sub(
+                r"://([^:]+):([^@]+)@",
+                r"://\1:[REDACTED_CREDENTIALS]@",
+                raw_exc,
+            )
+            redacted_exc = redact_pii(masked_exc)
+            log_data["exception"] = redacted_exc
 
-        # Include custom extra attributes if present
+        # Include custom extra attributes if present with deep sanitization
         if hasattr(record, "extra_fields") and isinstance(record.extra_fields, dict):
-            for k, v in record.extra_fields.items():
-                if isinstance(v, str):
-                    log_data[k] = redact_pii(v)
-                else:
-                    log_data[k] = v
+            sanitized_extra = sanitize_structure(record.extra_fields)
+            if isinstance(sanitized_extra, dict):
+                log_data.update(sanitized_extra)
 
         return json.dumps(log_data, ensure_ascii=False)
 

@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 // =============================================================================
-// 1. Health & System Telemetry Contracts
+// 1. Health & System Telemetry Contracts (Foundation Approved)
 // =============================================================================
 
 export const HealthStatusSchema = z.object({
@@ -23,7 +23,7 @@ export const HealthStatusSchema = z.object({
 export type HealthStatus = z.infer<typeof HealthStatusSchema>;
 
 // =============================================================================
-// 2. RFC 7807 Problem Details Error Contract
+// 2. RFC 7807 Problem Details Error Contract (Foundation Approved)
 // =============================================================================
 
 export const ProblemDetailsSchema = z.object({
@@ -48,7 +48,7 @@ export const ProblemDetailsSchema = z.object({
 export type ProblemDetails = z.infer<typeof ProblemDetailsSchema>;
 
 // =============================================================================
-// 3. Three-Dimensional Triage & Assessment Contracts
+// 3. Three-Dimensional Triage Contracts (PROVISIONAL - Subject to Packet 02)
 // =============================================================================
 
 export const ImmediateSafetyStateSchema = z.enum([
@@ -75,7 +75,9 @@ export const ReportedUrgencyLevelSchema = z.enum([
 export type ReportedUrgencyLevel = z.infer<typeof ReportedUrgencyLevelSchema>;
 
 // =============================================================================
-// 4. Evidence-First Domain Object
+// 4. Evidence Object (DRAFT / PROVISIONAL - Formally Validated in Packet 02)
+// Note: SVI relevance is non-linear and multidimensional. Does not enforce
+// an arbitrary additive formula. Final scoring model belongs to Packet 11.
 // =============================================================================
 
 export const EvidenceItemSchema = z.object({
@@ -95,7 +97,7 @@ export const EvidenceItemSchema = z.object({
   confidence: z.number().min(0.0).max(1.0),
   audio_quality_snr: z.number().optional(),
   model_version: z.string(),
-  svi_point_contribution: z.number(),
+  provisional_signal_weight: z.number().optional(),
   human_review_status: z
     .enum(["PENDING", "CONFIRMED", "DISMISSED", "MODIFIED"])
     .default("PENDING"),
@@ -105,7 +107,8 @@ export const EvidenceItemSchema = z.object({
 export type EvidenceItem = z.infer<typeof EvidenceItemSchema>;
 
 // =============================================================================
-// 5. Policy-Driven Follow-Up Model
+// 5. Policy-Driven Follow-Up Model (DRAFT / PROVISIONAL - Packet 02 Scope)
+// Support service categories must be re-checked against full SIH26093 outcomes.
 // =============================================================================
 
 export const FollowUpPolicySchema = z.object({
@@ -128,7 +131,7 @@ export const FollowUpPolicySchema = z.object({
 export type FollowUpPolicy = z.infer<typeof FollowUpPolicySchema>;
 
 // =============================================================================
-// 6. Closed-Loop Referral Lifecycle States
+// 6. Referral Lifecycle States (DRAFT / PROVISIONAL - Packet 02 Scope)
 // =============================================================================
 
 export const ReferralStateSchema = z.enum([

@@ -6,7 +6,7 @@ Ensures PostgreSQL is canonical and validates all operational boundaries.
 
 from typing import Literal
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -86,6 +86,53 @@ class Settings(BaseSettings):
                 "SQLite is prohibited as a production or integration alternative."
             )
         return v
+
+    @model_validator(mode="after")
+    def validate_production_boundaries(self) -> "Settings":
+        """Strict fail-fast validation rejecting insecure development defaults in staging/production."""
+        if self.ENVIRONMENT in ("staging", "production"):
+            if self.DEBUG:
+                raise ValueError("DEBUG mode must be False in staging and production environments.")
+
+            # Validate SECRET_KEY strength and prohibit dev defaults
+            if (
+                not self.SECRET_KEY
+                or len(self.SECRET_KEY) < 32
+                or "insecure" in self.SECRET_KEY.lower()
+                or "replace_in_production" in self.SECRET_KEY.lower()
+                or self.SECRET_KEY in ("changeme", "secret", "password", "sambal_secret")
+            ):
+                raise ValueError(
+                    "Insecure or default development SECRET_KEY is strictly rejected in staging/production. "
+                    "A cryptographically strong secret of at least 32 characters must be provided."
+                )
+
+            # Validate PostgreSQL host and credentials
+            if "localhost" in self.DATABASE_URL or "127.0.0.1" in self.DATABASE_URL:
+                raise ValueError(
+                    "Inappropriate localhost DATABASE_URL rejected in staging/production. "
+                    "Production must reference dedicated managed PostgreSQL infrastructure."
+                )
+            if "sambal_secure_pass" in self.DATABASE_URL:
+                raise ValueError(
+                    "Default development database credentials (sambal_secure_pass) rejected in staging/production."
+                )
+
+            # Validate S3 storage host and credentials
+            if "localhost" in self.S3_ENDPOINT_URL or "127.0.0.1" in self.S3_ENDPOINT_URL:
+                raise ValueError(
+                    "Inappropriate localhost S3_ENDPOINT_URL rejected in staging/production. "
+                    "Production must reference resilient S3-compatible cloud storage."
+                )
+            if (
+                self.S3_ACCESS_KEY == "sambal_minio_admin"
+                or self.S3_SECRET_KEY == "sambal_minio_secret_key_2026"
+            ):
+                raise ValueError(
+                    "Default development MinIO credentials rejected in staging/production."
+                )
+
+        return self
 
 
 settings = Settings()

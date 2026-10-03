@@ -1,79 +1,146 @@
 import React from "react";
 import {
-  ShieldAlert,
-  HeartPulse,
-  Scale,
-  CheckCircle2,
-  Lock,
-  Cpu,
-  Server,
   Activity,
+  Server,
+  Shield,
+  Database,
+  Cpu,
+  Lock,
+  CheckCircle2,
+  Clock,
+  AlertTriangle,
 } from "lucide-react";
-import type {
-  ImmediateSafetyState,
-  SVIBand,
-  ReportedUrgencyLevel,
-} from "@sambal/contracts";
 
-interface ArchitecturePillar {
-  title: string;
-  badge: string;
-  badgeColor: string;
+interface ComponentCapability {
+  name: string;
+  category: string;
+  status:
+    | "FOUNDATION_READY"
+    | "BASELINE_CANDIDATE"
+    | "PROVISIONAL"
+    | "SANDBOX"
+    | "NOT_STARTED";
   description: string;
-  icon: React.ElementType;
-  specs: string[];
+  notes: string;
 }
 
 export default function HomePage() {
-  const sampleSafety: ImmediateSafetyState = "NO_IMMEDIATE_SIGNAL";
-  const sampleSVIBand: SVIBand = "MODERATE";
-  const sampleUrgency: ReportedUrgencyLevel = "PRIORITY";
-
-  const pillars: ArchitecturePillar[] = [
+  const capabilities: ComponentCapability[] = [
     {
-      title: "Immediate Safety Gate",
-      badge: sampleSafety,
-      badgeColor: "bg-emerald-100 text-emerald-800 border-emerald-300",
+      name: "Monorepo Toolchain & App Shells",
+      category: "Platform Core",
+      status: "FOUNDATION_READY",
       description:
-        "Zero-latency distress interrupt safeguarding citizens during active crisis. Escalations strictly require authorized human verification before emergency dispatch.",
-      icon: ShieldAlert,
-      specs: [
-        "Acoustic tremor & distress keyword signals",
-        "Human-in-the-loop ERSS 112 escalation boundary",
-        "Automatic silent intake switch",
-      ],
+        "Next.js 16 Active-LTS PWA shell, FastAPI Modular Monolith, shared contracts, and Docker dev environment.",
+      notes: "Clean-CI verified across unit, E2E, and Axe a11y test suites.",
     },
     {
-      title: "Stress & Vulnerability Index (SVI)",
-      badge: `${sampleSVIBand} (Provisional)`,
-      badgeColor: "bg-amber-100 text-amber-800 border-amber-300",
+      name: "Canonical PostgreSQL Engine",
+      category: "Data Persistence",
+      status: "FOUNDATION_READY",
       description:
-        "Continuous 0–100 trauma-informed composite scoring calibrated across acoustic features, linguistic distress markers, and situational vulnerability.",
-      icon: HeartPulse,
-      specs: [
-        "Provisional triage policy baseline (non-clinical)",
-        "Multi-signal acoustic & transcript evidence",
-        "Counterfactual explanation & human override",
-      ],
+        "PostgreSQL 16 connection pool with asyncpg driver and strict rejection of non-PostgreSQL / SQLite URIs.",
+      notes:
+        "Authoritative database across dev, CI, integration, and production.",
     },
     {
-      title: "Reported Incident Urgency",
-      badge: sampleUrgency,
-      badgeColor: "bg-blue-100 text-blue-800 border-blue-300",
+      name: "S3 Object Storage & Bucket Readiness",
+      category: "Object Storage",
+      status: "FOUNDATION_READY",
       description:
-        "Factual urgency classification based on reported narrative elements. The system does not determine legal guilt, offence proof, or complainant veracity.",
-      icon: Scale,
-      specs: [
-        "Facts-informed routing for statutory officers",
-        "Policy-driven follow-up scheduling",
-        "Full audit trail and evidentiary provenance",
-      ],
+        "MinIO/S3 connection with deterministic bucket readiness verification via non-blocking threadpool I/O.",
+      notes: "Local MinIO on port 9093; bucket initialization verified.",
+    },
+    {
+      name: "Baseline PII-Safe Logging Filter",
+      category: "Privacy & Security",
+      status: "FOUNDATION_READY",
+      description:
+        "Regex-based redaction for Aadhaar numbers, Indian mobile phones, and emails with structured key filtering.",
+      notes:
+        "Baseline filter; not a complete zero-leakage guarantee. Prohibited domain fields filtered.",
+    },
+    {
+      name: "Speech-to-Text Pipeline (ASR)",
+      category: "Speech Intelligence",
+      status: "BASELINE_CANDIDATE",
+      description:
+        "faster-whisper-turbo + CTranslate2 INT8 designated as initial local baseline candidate.",
+      notes:
+        "Requires Packet 08 benchmarking against IndicConformer/Bhashini across 11 explicit metrics.",
+    },
+    {
+      name: "Stress & Vulnerability Index (SVI)",
+      category: "Triage Assessment",
+      status: "PROVISIONAL",
+      description:
+        "Trauma-informed 0-100 composite framework. No final mathematical formula encoded in foundation.",
+      notes:
+        "Marked PROVISIONAL_TRIAGE_POLICY. Final parameterization belongs to Packet 11.",
+    },
+    {
+      name: "Emergency Response (ERSS 112)",
+      category: "External Adapters",
+      status: "SANDBOX",
+      description:
+        "Human-authorized emergency handoff boundary. Autonomous dispatch is strictly prohibited.",
+      notes:
+        "All escalations require human operator verification and authorization.",
+    },
+    {
+      name: "Citizen Intake & Operator Copilot",
+      category: "Interaction Surfaces",
+      status: "NOT_STARTED",
+      description:
+        "Multimodal citizen intake (speak/write/silent) and supervisor triage dashboard.",
+      notes: "Scheduled for implementation in Packets 07 and 13.",
     },
   ];
 
+  const getStatusBadge = (status: ComponentCapability["status"]) => {
+    switch (status) {
+      case "FOUNDATION_READY":
+        return (
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-300">
+            <CheckCircle2 className="w-3 h-3 mr-1 text-emerald-600" />
+            FOUNDATION_READY
+          </span>
+        );
+      case "BASELINE_CANDIDATE":
+        return (
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-sky-100 text-sky-800 border border-sky-300">
+            <Cpu className="w-3 h-3 mr-1 text-sky-600" />
+            BASELINE_CANDIDATE
+          </span>
+        );
+      case "PROVISIONAL":
+        return (
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-100 text-amber-800 border border-amber-300">
+            <AlertTriangle className="w-3 h-3 mr-1 text-amber-600" />
+            PROVISIONAL
+          </span>
+        );
+      case "SANDBOX":
+        return (
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-purple-100 text-purple-800 border border-purple-300">
+            <Shield className="w-3 h-3 mr-1 text-purple-600" />
+            SANDBOX
+          </span>
+        );
+      case "NOT_STARTED":
+      default:
+        return (
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-300">
+            <Clock className="w-3 h-3 mr-1 text-slate-500" />
+            NOT_STARTED
+          </span>
+        );
+    }
+  };
+
   return (
     <div className="space-y-8">
-      {/* Hero Section */}
+      {/* Header Banner */}
       <section
         className="bg-white rounded-xl p-8 border border-slate-200/80 shadow-sm"
         aria-labelledby="foundation-heading"
@@ -82,20 +149,20 @@ export default function HomePage() {
           <div className="space-y-3">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-teal-50 text-teal-800 border border-teal-200">
               <span className="w-2 h-2 rounded-full bg-teal-600"></span>
-              Packet 01 — Repository Foundation & Toolchain
+              Packet 01R — Repository Foundation Remediation
             </div>
             <h1
               id="foundation-heading"
               className="text-2xl md:text-3xl font-bold text-civic-dark tracking-tight"
             >
-              SAMBAL Real-Time Multilingual Trauma-Aware Intelligence & Response
-              Layer
+              SAMBAL Intelligence & Response Layer — Architecture & Foundation
+              Status
             </h1>
             <p className="text-slate-600 text-sm max-w-3xl leading-relaxed">
               SIH26093 Problem Statement for the National Helpline Against
-              Atrocities (14566) and Integrated Portal, under the Ministry of
-              Social Justice & Empowerment. Operating on the V3 Lean-Core
-              Architecture.
+              Atrocities (14566) and Integrated Portal. Operating under the V3
+              Lean-Core Architecture. Substantive domain capabilities are
+              tracked with truthful capability states.
             </p>
           </div>
 
@@ -110,92 +177,76 @@ export default function HomePage() {
             </a>
             <a
               id="view-backend-health-btn"
-              href="http://localhost:8093/health/live"
-              target="_blank"
-              rel="noopener noreferrer"
+              href="/api/backend/health/live"
               className="inline-flex items-center justify-center px-4 py-2 text-xs font-medium rounded-lg text-white bg-civic-teal hover:bg-civic-sage transition-colors focus:ring-2 focus:ring-offset-2 focus:ring-civic-teal focus:outline-none"
             >
               <Server className="w-3.5 h-3.5 mr-1.5" />
-              FastAPI Liveness
+              Backend Liveness
             </a>
           </div>
         </div>
       </section>
 
-      {/* 3-Dimensional Risk Architecture */}
-      <section aria-labelledby="pillars-heading">
-        <div className="mb-4">
+      {/* Capability & Architecture State Matrix */}
+      <section
+        aria-labelledby="capabilities-heading"
+        className="bg-white rounded-xl p-6 border border-slate-200/80 shadow-sm"
+      >
+        <div className="mb-6">
           <h2
-            id="pillars-heading"
+            id="capabilities-heading"
             className="text-lg font-bold text-civic-dark tracking-tight"
           >
-            Three-Dimensional Triage & Assessment Architecture
+            Component Capability & Truth-State Matrix
           </h2>
-          <p className="text-xs text-slate-500">
-            Authoritative assessment model preserving evidence provenance and
-            human review boundaries.
+          <p className="text-xs text-slate-600">
+            Authoritative tracking of foundation deliverables, provisional
+            policies, candidate models, and pending domains.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {pillars.map((pillar) => {
-            const Icon = pillar.icon;
-            return (
-              <div
-                key={pillar.title}
-                className="bg-white rounded-xl p-6 border border-slate-200/80 shadow-sm flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center text-civic-teal">
-                      <Icon className="w-5 h-5" />
-                    </div>
-                    <span
-                      className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border ${pillar.badgeColor}`}
-                    >
-                      {pillar.badge}
-                    </span>
-                  </div>
-                  <h3 className="text-base font-semibold text-slate-900 mb-2">
-                    {pillar.title}
-                  </h3>
-                  <p className="text-xs text-slate-600 mb-4 leading-relaxed">
-                    {pillar.description}
-                  </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {capabilities.map((cap) => (
+            <div
+              key={cap.name}
+              className="p-5 rounded-lg border border-slate-200 bg-slate-50/50 flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                    {cap.category}
+                  </span>
+                  {getStatusBadge(cap.status)}
                 </div>
-
-                <div className="pt-4 border-t border-slate-100">
-                  <h4 className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-2">
-                    Architectural Guardrails
-                  </h4>
-                  <ul className="space-y-1.5">
-                    {pillar.specs.map((spec, i) => (
-                      <li
-                        key={i}
-                        className="text-xs text-slate-700 flex items-start"
-                      >
-                        <CheckCircle2 className="w-3.5 h-3.5 text-civic-teal mr-1.5 mt-0.5 flex-shrink-0" />
-                        <span>{spec}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
+                <h3 className="text-sm font-bold text-slate-900 mb-1">
+                  {cap.name}
+                </h3>
+                <p className="text-xs text-slate-600 mb-3 leading-relaxed">
+                  {cap.description}
+                </p>
               </div>
-            );
-          })}
+
+              <div className="pt-3 border-t border-slate-200/60 text-[11px] text-slate-600 flex items-start">
+                <span className="font-semibold text-slate-700 mr-1.5 flex-shrink-0">
+                  Engineering Note:
+                </span>
+                <span>{cap.notes}</span>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* V3 Lean-Core Stack Status */}
+      {/* V3 Lean-Core Infrastructure Boundaries */}
       <section
         className="bg-white rounded-xl p-6 border border-slate-200/80 shadow-sm"
-        aria-labelledby="stack-heading"
+        aria-labelledby="boundaries-heading"
       >
         <h2
-          id="stack-heading"
+          id="boundaries-heading"
           className="text-base font-bold text-civic-dark mb-4"
         >
-          V3 Lean-Core Toolchain & Architectural Boundary Status
+          V3 Lean-Core Verified Infrastructure Boundaries
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
@@ -206,10 +257,10 @@ export default function HomePage() {
                 FastAPI Monolith
               </span>
               <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded">
-                Active
+                Port 8093
               </span>
             </div>
-            <p className="text-slate-500">
+            <p className="text-slate-600">
               Python 3.12, strict typing, RFC 7807 problem details, correlation
               IDs.
             </p>
@@ -225,7 +276,7 @@ export default function HomePage() {
                 Port 5493
               </span>
             </div>
-            <p className="text-slate-500">
+            <p className="text-slate-600">
               PostgreSQL 16 canonical across all environments. Zero SQLite
               reliance.
             </p>
@@ -235,15 +286,15 @@ export default function HomePage() {
             <div className="flex items-center justify-between text-slate-900 font-semibold mb-1">
               <span className="flex items-center gap-1.5">
                 <Cpu className="w-4 h-4 text-civic-teal" />
-                ASR Status
+                Object Storage
               </span>
-              <span className="text-[10px] bg-sky-100 text-sky-800 px-1.5 py-0.5 rounded">
-                Candidate
+              <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded">
+                Port 9093
               </span>
             </div>
-            <p className="text-slate-500">
-              faster-whisper-turbo is BASELINE_CANDIDATE. Subject to Packet 08
-              benchmark.
+            <p className="text-slate-600">
+              MinIO S3 storage with threadpool-isolated bucket readiness
+              checking.
             </p>
           </div>
 
@@ -251,40 +302,18 @@ export default function HomePage() {
             <div className="flex items-center justify-between text-slate-900 font-semibold mb-1">
               <span className="flex items-center gap-1.5">
                 <Lock className="w-4 h-4 text-civic-teal" />
-                PII-Safe Logging
+                PII Redaction Filter
               </span>
               <span className="text-[10px] bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded">
-                Enforced
+                Active
               </span>
             </div>
-            <p className="text-slate-500">
-              Zero-leakage regex redaction for Aadhaar, phones, emails in all
-              logs.
+            <p className="text-slate-600">
+              Baseline regex sanitization for Aadhaar, phones, emails in logs.
             </p>
           </div>
         </div>
       </section>
     </div>
-  );
-}
-
-function Database(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <ellipse cx="12" cy="5" rx="9" ry="3" />
-      <path d="M3 5V19A9 3 0 0 0 21 19V5" />
-      <path d="M3 12A9 3 0 0 0 21 12" />
-    </svg>
   );
 }

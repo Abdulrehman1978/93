@@ -58,7 +58,7 @@ async def check_database_health() -> tuple[bool, float | None, str | None]:
     except Exception as exc:
         latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
         logger.warning(f"Database health check failed: {exc}")
-        return False, latency_ms, str(exc)
+        return False, latency_ms, "Database connection unavailable"
 
 
 async def dispose_database() -> None:

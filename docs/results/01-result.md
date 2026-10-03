@@ -1,19 +1,29 @@
 # Packet 01 — Repository Foundation & Monorepo Toolchain: Result Report
 
 > **Packet ID:** PKT-01  
-> **Status:** `PASS`  
+> **Status:** `PARTIAL — REQUIRED REMEDIATION` (Superceded by PKT-01R)  
 > **Date:** 2026-10-03  
 > **Author:** DevSecOps / Staff Systems Engineer  
-> **Reviewed By:** Principal System Architect  
+> **Reviewed By:** Owner / Principal System Architect  
 > **Repository Baseline:** SAMBAL Monorepo (SIH26093)  
+> **Initial Baseline Commit:** `5a88ec5579bd133d29dc9d08c9df88a8ed25d1f7`  
+> **Remediation Result Report:** [`01R-result.md`](./01R-result.md)  
 
 ---
 
-## 1. Status
+## 1. Historical Status Note & Review Finding
 
-`PASS`
-
-All required foundation scopes, strict type safety contracts, linting, formatting, unit/E2E/a11y tests, container definitions, and CI pipelines have been implemented and verified with zero warnings, zero errors, and zero accessibility violations.
+> [!WARNING]
+> **Owner Review Finding:** `PARTIAL — REQUIRED REMEDIATION`
+> While local workstation checks passed on commit `5a88ec5`, the associated GitHub Actions CI run (`37093441943`) failed.
+> Local green tests do not override clean-CI failure.
+>
+> 1. **Backend Quality Gates Failure (CI Run 37093441943):** CI injected `ENVIRONMENT=testing`, causing `test_settings_default_values()` to fail because it assumed `development`.
+> 2. **Security Scan Gate Failure (CI Run 37093441943):** Gitleaks action attempted to calculate git log against the root commit's non-existent parent (`a13767...^..5a88ec...`), triggering exit code 1.
+> 3. **Toolchain Obsolescence:** Next.js 14.2.15 was unsupported and flagged; migration to Next.js 16 Active-LTS, React 19, TypeScript 6, Vitest 5, and Playwright 1.63 was mandated.
+> 4. **Reproducibility & Pins:** Replaced machine-specific requirements lock with authoritative `uv.lock`, pinned uv 0.12.17 consistently, pinned PostgreSQL 16.15 and MinIO images, added non-blocking bucket readiness and PII logging policy hardening.
+>
+> Full remediation and clean-CI closure are authoritatively documented in **[01R-result.md](./01R-result.md)**.
 
 ---
 

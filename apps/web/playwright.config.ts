@@ -22,5 +22,8 @@ export default defineConfig({
     url: "http://localhost:3093/api/health",
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
+    env: {
+      PORT: "3093",
+    },
   },
 });
