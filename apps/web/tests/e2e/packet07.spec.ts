@@ -365,7 +365,9 @@ test.describe("Packet 07 citizen intake", () => {
     );
     await page.getByRole("button", { name: "Start safely" }).click();
     await expect(
-      page.locator(".language-selector__list button").filter({ hasText: "Hindi" }),
+      page
+        .locator(".language-selector__list button")
+        .filter({ hasText: "Hindi" }),
     ).toBeDisabled();
     await expect(page.locator(".citizen-language-lock")).toBeVisible();
   });
