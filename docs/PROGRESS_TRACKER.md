@@ -25,7 +25,8 @@
 | **PKT-06** | Channel Gateway & Consent Engine | **OWNER APPROVED — PASS via 06R2** | Phase 2 — Ingestion & Safety | Real-Time Systems / API Architect | [`docs/results/06-result.md`](./results/06-result.md) |
 | **PKT-06R** | **Canonical Consent Authority, Session Security & Policy-Integrity Remediation** | **OWNER APPROVED — PASS via 06R2** | Phase 2 — Ingestion & Safety | Real-Time Systems / API Architect + Security Architect | [`docs/results/06R-result.md`](./results/06R-result.md) |
 | **PKT-06R2** | **Case-Binding Integrity, Conditional Consent Semantics & Database Trust-Boundary Remediation** | **OWNER APPROVED — PASS** | Phase 2 — Ingestion & Safety | Real-Time Systems / API Architect + Security Architect | [`docs/results/06R2-result.md`](./results/06R2-result.md) |
-| **PKT-07** | Citizen Intake (Speak / Write / Silent) | **OWNER_REVIEW** | Phase 2 — Ingestion & Safety | Staff Frontend / Trauma UX Specialist | [`docs/results/07-result.md`](./results/07-result.md) |
+| **PKT-07** | Citizen Intake (Speak / Write / Silent) | **PARTIAL — REQUIRED REMEDIATION** | Phase 2 — Ingestion & Safety | Staff Frontend / Trauma UX Specialist | [`docs/results/07-result.md`](./results/07-result.md) |
+| **PKT-07R** | **Citizen Flow Continuity, Canonical Case Binding, Session Retry Safety & Browser Verification** | **OWNER_REVIEW** | Phase 2 — Ingestion & Safety | Staff Frontend / Security Architect / Trauma UX Specialist | [`docs/results/07R-result.md`](./results/07R-result.md) |
 | **PKT-08** | Multilingual Speech Pipeline & ASR | NOT_STARTED | Phase 2 — Ingestion & Safety | Speech AI Engineer / Applied ML | `docs/results/08-result.md` |
 | **PKT-09** | Text Safety, Negation & Context Engine | NOT_STARTED | Phase 2 — Ingestion & Safety | Multilingual NLP Engineer | `docs/results/09-result.md` |
 | **PKT-10** | Acoustic & Affective Signal Engine | NOT_STARTED | Phase 2 — Ingestion & Safety | Speech Analytics Lead / Audio ML | `docs/results/10-result.md` |

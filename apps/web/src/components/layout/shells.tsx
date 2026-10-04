@@ -7,6 +7,7 @@ import { LanguageSelector } from "@/components/language-selector";
 import { StatusBadge } from "@/components/status";
 import { cn } from "@/lib/cn";
 import { QuickExit } from "@/components/citizen/quick-exit";
+import { useEffect, useState } from "react";
 
 function PrototypeIdentity() {
   return (
@@ -73,6 +74,26 @@ export function PublicShell({
 }
 
 export function CitizenShell({ children }: { children: ReactNode }) {
+  const [language, setLanguage] = useState("en");
+  const [sessionActive, setSessionActive] = useState(false);
+
+  useEffect(() => {
+    const sync = () => {
+      const stored = window.sessionStorage.getItem("sambal:intake:language");
+      if (stored) setLanguage(stored);
+      setSessionActive(
+        Boolean(window.sessionStorage.getItem("sambal:intake:session")),
+      );
+    };
+    sync();
+    window.addEventListener("sambal:session-started", sync);
+    window.addEventListener("sambal:session-ended", sync);
+    return () => {
+      window.removeEventListener("sambal:session-started", sync);
+      window.removeEventListener("sambal:session-ended", sync);
+    };
+  }, []);
+
   return (
     <PublicShell className="app-shell--citizen">
       <div className="citizen-toolbar" aria-label="Citizen safety controls">
@@ -82,10 +103,18 @@ export function CitizenShell({ children }: { children: ReactNode }) {
             { code: "hi", nativeName: "हिन्दी", englishName: "Hindi" },
             { code: "mr", nativeName: "मराठी", englishName: "Marathi" },
           ]}
+          defaultCode={language}
+          disabled={sessionActive}
           onChange={(code) => {
             window.sessionStorage.setItem("sambal:intake:language", code);
           }}
         />
+        {sessionActive ? (
+          <span className="citizen-language-lock" role="status">
+            Language locked for this private session; start a new session to
+            change it.
+          </span>
+        ) : null}
         <QuickExit />
       </div>
       <div className="citizen-content">{children}</div>

@@ -77,6 +77,7 @@ class Settings(BaseSettings):
     SESSION_TTL_SECONDS: int = 1800
     SESSION_IDLE_TIMEOUT_SECONDS: int = 900
     SESSION_ABSOLUTE_MAX_SECONDS: int = 3600
+    SUBMISSION_RECEIPT_RETRY_SECONDS: int = 120
     PUBLIC_SESSION_HEADER: str = "X-Channel-Session-Token"
 
     # Policy Baselines (Provisional Triage Policy; clinical finality requires formal validation)

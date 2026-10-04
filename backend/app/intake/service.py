@@ -28,7 +28,6 @@ from app.db.models.governance import (
 from app.db.models.platform import AuditEvent
 from app.errors import AppException
 from app.intake.schemas import IntakeSubmissionResponse, SilentIntakeRequest, WriteIntakeRequest
-from app.privacy.processing_authorization import promote_interaction_authorizations_to_case
 
 
 class CitizenIntakeService:
@@ -169,8 +168,7 @@ class CitizenIntakeService:
                     safe_to_use=False,
                 )
             )
-        interaction.case_id = case.id
-        await promote_interaction_authorizations_to_case(session, interaction, case.id)
+        await self.sessions.bind_authenticated_interaction(session, interaction, case.id)
         session.add(
             CaseStatusEvent(
                 case_id=case.id,

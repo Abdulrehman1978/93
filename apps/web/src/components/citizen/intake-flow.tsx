@@ -14,7 +14,6 @@ import {
   LinkButton,
   Textarea,
 } from "@/components/ui";
-import { clearCitizenSession } from "@/components/citizen/quick-exit";
 
 type FlowMode = "help" | "write" | "silent" | "speak" | "received";
 type IntakeMode = "TEXT" | "SILENT" | "VOICE";
@@ -25,6 +24,11 @@ type SessionInfo = {
   expires_at: string;
   policy_version: string;
   available_modes: IntakeMode[];
+  channel?: "WEB";
+  interaction_mode?: IntakeMode | "UNSELECTED";
+  status?: string;
+  language?: string | null;
+  intake_ready?: boolean;
 };
 
 type Policy = {
@@ -40,6 +44,7 @@ type Policy = {
     retention_status: string;
     effect_of_decline: string;
   }>;
+  intake_ready: boolean;
 };
 
 type Receipt = {
@@ -76,6 +81,18 @@ const emptyDraft: WriteDraft = {
   optional_contact_value: "",
 };
 
+class RequestError extends Error {
+  status: number;
+  type?: string;
+
+  constructor(message: string, status: number, type?: string) {
+    super(message);
+    this.name = "RequestError";
+    this.status = status;
+    this.type = type;
+  }
+}
+
 function clientId(prefix: string) {
   const random =
     globalThis.crypto?.randomUUID?.() ?? Math.random().toString(36).slice(2);
@@ -99,11 +116,15 @@ async function requestJson<T>(
   });
   if (!response.ok) {
     const body = (await response.json().catch(() => null)) as {
-      detail?: string;
+      detail?: string | { message?: string };
+      type?: string;
     } | null;
-    throw new Error(
-      body?.detail || "We could not complete that step. Please try again.",
-    );
+    const detail =
+      typeof body?.detail === "string"
+        ? body.detail
+        : body?.detail?.message ||
+          "We could not complete that step. Please try again.";
+    throw new RequestError(detail, response.status, body?.type);
   }
   return (await response.json()) as T;
 }
@@ -208,9 +229,12 @@ export function CitizenIntakeFlow({ mode }: { mode: FlowMode }) {
   });
   const [receipt, setReceipt] = useState<Receipt | null>(null);
   const [submissionIds, setSubmissionIds] = useState({ write: "", silent: "" });
+  const [hydrating, setHydrating] = useState(true);
+  const [sessionExpired, setSessionExpired] = useState(false);
 
   useEffect(() => {
-    setSession(loadSession());
+    const storedSession = loadSession();
+    setSession(storedSession);
     try {
       const storedDraft = window.sessionStorage.getItem(DRAFT_KEY);
       if (storedDraft)
@@ -231,15 +255,62 @@ export function CitizenIntakeFlow({ mode }: { mode: FlowMode }) {
     } catch {
       // A missing draft is safe; the user can continue without it.
     }
+    if (!storedSession) {
+      setHydrating(false);
+      return;
+    }
+    void (async () => {
+      try {
+        const state = await requestJson<SessionInfo>(
+          `/channel/sessions/${storedSession.session_id}`,
+          {},
+          storedSession.session_token,
+        );
+        const restored = { ...storedSession, ...state };
+        setSession(restored);
+        saveSession(restored);
+        const restoredPolicy = await requestJson<Policy>(
+          `/channel/sessions/${storedSession.session_id}/policy`,
+          {},
+          storedSession.session_token,
+        );
+        setPolicy(restoredPolicy);
+        setContinued(
+          Boolean(state.intake_ready || restoredPolicy.intake_ready),
+        );
+      } catch (cause) {
+        if (
+          cause instanceof RequestError &&
+          [401, 403].includes(cause.status)
+        ) {
+          window.sessionStorage.removeItem(SESSION_KEY);
+          window.sessionStorage.removeItem(WRITE_SUBMISSION_KEY);
+          window.sessionStorage.removeItem(SILENT_SUBMISSION_KEY);
+          setSession(null);
+          setSessionExpired(true);
+        } else {
+          setError(
+            cause instanceof Error
+              ? cause.message
+              : "We could not restore this private session.",
+          );
+        }
+      } finally {
+        setHydrating(false);
+      }
+    })();
   }, []);
 
   useEffect(() => {
-    if (mode === "silent") {
-      document.title = "Citizen Information Services";
-      return () => {
-        document.title = "SAMBAL — Civic service prototype";
-      };
-    }
+    const heading = document.querySelector<HTMLElement>("#main-content h1");
+    heading?.focus({ preventScroll: true });
+  }, [mode, writeStep, silentStep, continued, sessionExpired]);
+
+  useEffect(() => {
+    document.title =
+      mode === "silent"
+        ? "Citizen Information Services"
+        : "SAMBAL — Civic service prototype";
   }, [mode]);
 
   useEffect(() => {
@@ -257,10 +328,35 @@ export function CitizenIntakeFlow({ mode }: { mode: FlowMode }) {
     setDraft((current) => ({ ...current, [key]: value }));
   const hasSession = Boolean(session?.session_id && session.session_token);
 
+  useEffect(() => {
+    if (hydrating || mode === "help" || mode === "received" || !session) return;
+    const expected: Record<
+      Exclude<FlowMode, "help" | "received">,
+      IntakeMode
+    > = {
+      write: "TEXT",
+      silent: "SILENT",
+      speak: "VOICE",
+    };
+    if (
+      !session.intake_ready ||
+      (session.interaction_mode &&
+        session.interaction_mode !== "UNSELECTED" &&
+        session.interaction_mode !== expected[mode])
+    ) {
+      router.replace("/help");
+    }
+  }, [hydrating, mode, router, session]);
+
   const begin = async () => {
     setBusy(true);
     setError("");
     try {
+      window.sessionStorage.removeItem(SESSION_KEY);
+      window.sessionStorage.removeItem(WRITE_SUBMISSION_KEY);
+      window.sessionStorage.removeItem(SILENT_SUBMISSION_KEY);
+      setPolicy(null);
+      setContinued(false);
       const locale = window.sessionStorage.getItem(LANGUAGE_KEY) || "en";
       const created = await requestJson<SessionInfo>("/channel/sessions", {
         method: "POST",
@@ -273,12 +369,15 @@ export function CitizenIntakeFlow({ mode }: { mode: FlowMode }) {
       });
       saveSession(created);
       setSession(created);
+      setSessionExpired(false);
+      window.dispatchEvent(new Event("sambal:session-started"));
       const nextPolicy = await requestJson<Policy>(
         `/channel/sessions/${created.session_id}/policy`,
         {},
         created.session_token,
       );
       setPolicy(nextPolicy);
+      setContinued(Boolean(nextPolicy.intake_ready));
     } catch (cause) {
       setError(
         cause instanceof Error
@@ -298,6 +397,7 @@ export function CitizenIntakeFlow({ mode }: { mode: FlowMode }) {
       activeSession.session_token,
     );
     setPolicy(nextPolicy);
+    setContinued(Boolean(nextPolicy.intake_ready));
     return nextPolicy;
   };
 
@@ -317,13 +417,24 @@ export function CitizenIntakeFlow({ mode }: { mode: FlowMode }) {
         },
         session.session_token,
       );
-      setContinued(true);
+      const nextPolicy = await loadPolicy();
+      setContinued(Boolean(nextPolicy?.intake_ready));
     } catch (cause) {
-      setError(
-        cause instanceof Error
-          ? cause.message
-          : "We could not record your choice.",
-      );
+      if (cause instanceof RequestError && cause.status === 409) {
+        try {
+          await loadPolicy();
+        } catch {
+          // Keep the original error if the policy cannot be refreshed.
+        }
+        setContinued(false);
+        setError("The notice was updated. Please review it again.");
+      } else {
+        setError(
+          cause instanceof Error
+            ? cause.message
+            : "We could not record your choice.",
+        );
+      }
     } finally {
       setBusy(false);
     }
@@ -397,6 +508,7 @@ export function CitizenIntakeFlow({ mode }: { mode: FlowMode }) {
       window.sessionStorage.removeItem(
         kind === "write" ? WRITE_SUBMISSION_KEY : SILENT_SUBMISSION_KEY,
       );
+      window.dispatchEvent(new Event("sambal:session-ended"));
       window.sessionStorage.setItem(RECEIPT_KEY, JSON.stringify(result));
       setReceipt(result);
       router.push("/help/received");
@@ -421,11 +533,37 @@ export function CitizenIntakeFlow({ mode }: { mode: FlowMode }) {
     return <ReceiptView receipt={receipt} />;
   }
 
+  if (hydrating) {
+    return (
+      <div className="citizen-flow" aria-live="polite">
+        <h1 tabIndex={-1}>Restoring your private session</h1>
+        <p>Please wait while we check the session on this device.</p>
+      </div>
+    );
+  }
+
+  if (sessionExpired) {
+    return (
+      <div className="citizen-flow">
+        <p className="eyebrow">Private session ended</p>
+        <h1 tabIndex={-1}>Your saved words are still here</h1>
+        <p className="citizen-lead">
+          This short-lived session expired. Your draft was kept only on this
+          device; start a new private session when it is safe.
+        </p>
+        {error ? <FieldError>{error}</FieldError> : null}
+        <Button size="lg" onClick={begin} loading={busy}>
+          Start a new private session
+        </Button>
+      </div>
+    );
+  }
+
   if (mode === "help") {
     return (
       <div className="citizen-flow">
         <p className="eyebrow">A private place to begin</p>
-        <h1>How would you like to share?</h1>
+        <h1 tabIndex={-1}>How would you like to share?</h1>
         <p className="citizen-lead">
           You choose what feels safest. You do not need to know the right words,
           prove anything, or provide your name.
@@ -460,7 +598,7 @@ export function CitizenIntakeFlow({ mode }: { mode: FlowMode }) {
   if (!hasSession) {
     return (
       <div className="citizen-flow">
-        <h1>Let’s begin safely</h1>
+        <h1 tabIndex={-1}>Let’s begin safely</h1>
         <p>Start a private session before choosing an intake method.</p>
         <LinkButton href="/help" size="lg">
           Go to safe start <ArrowRight aria-hidden="true" />
@@ -474,7 +612,7 @@ export function CitizenIntakeFlow({ mode }: { mode: FlowMode }) {
       <div className="citizen-flow">
         {back}
         <p className="eyebrow">Speak</p>
-        <h1>Speak is not active yet</h1>
+        <h1 tabIndex={-1}>Speak is not active yet</h1>
         <p className="citizen-lead">
           Voice capture and speech recognition have not started. No microphone,
           recording, or audio upload is used on this page.
@@ -484,12 +622,17 @@ export function CitizenIntakeFlow({ mode }: { mode: FlowMode }) {
           <span>You can use Write or Silent intake instead.</span>
         </div>
         <div className="citizen-actions">
-          <LinkButton href="/help/write" size="lg">
+          <Button size="lg" onClick={() => chooseMode("TEXT")} loading={busy}>
             Write instead
-          </LinkButton>
-          <LinkButton href="/help/silent" variant="secondary" size="lg">
+          </Button>
+          <Button
+            variant="secondary"
+            size="lg"
+            onClick={() => chooseMode("SILENT")}
+            loading={busy}
+          >
             Use Silent intake
-          </LinkButton>
+          </Button>
         </div>
       </div>
     );
@@ -598,7 +741,7 @@ function WriteFlow({
       <div className="citizen-flow">
         {back}
         <p className="eyebrow">Write · Review</p>
-        <h1>Review before sending</h1>
+        <h1 tabIndex={-1}>Review before sending</h1>
         <p className="citizen-lead">
           You can go back and change anything. Only the information shown below
           will be sent.
@@ -616,10 +759,15 @@ function WriteFlow({
               <strong>Where:</strong> {draft.optional_location}
             </p>
           ) : null}
-          {draft.optional_contact_value ? (
+          {draft.optional_contact_preference ? (
             <p>
               <strong>Contact preference:</strong>{" "}
               {draft.optional_contact_preference || "Not specified"}
+            </p>
+          ) : null}
+          {draft.optional_contact_value ? (
+            <p>
+              <strong>Contact detail:</strong> {draft.optional_contact_value}
             </p>
           ) : null}
         </div>
@@ -638,7 +786,7 @@ function WriteFlow({
     <div className="citizen-flow">
       {back}
       <p className="eyebrow">Write</p>
-      <h1>Tell us what you want us to know</h1>
+      <h1 tabIndex={-1}>Tell us what you want us to know</h1>
       <p className="citizen-lead">
         Use your own words. You can leave optional questions blank.
       </p>
@@ -746,6 +894,24 @@ function WriteFlow({
   );
 }
 
+const silentValueLabels: Record<string, string> = {
+  YES: "Yes",
+  NO: "No",
+  NO_SOMEONE_MAY_BE_NEARBY: "No — someone may be nearby",
+  NOT_SURE: "Not sure",
+  SKIP: "Skip",
+  YES_AS_SOON_AS_POSSIBLE: "Yes, as soon as possible",
+  DO_NOT_CALL: "Do not call",
+  SILENT_SMS_PREFERRED: "Silent SMS preferred",
+  WHATSAPP_PREFERRED: "WhatsApp preferred",
+  ASK_ME_LATER: "Ask me later",
+  NO_CONTACT_DETAILS_NOW: "No contact details now",
+};
+
+function humanizeSilentValue(value: string) {
+  return silentValueLabels[value] || value || "Not answered";
+}
+
 function SilentFlow({
   silent,
   setSilent,
@@ -818,7 +984,7 @@ function SilentFlow({
       <div className="citizen-flow">
         {back}
         <p className="eyebrow">Silent · Question {step + 1} of 3</p>
-        <h1>{question.title}</h1>
+        <h1 tabIndex={-1}>{question.title}</h1>
         <div className="choice-stack">
           {question.options.map(([value, label]) => (
             <ChoiceButton
@@ -843,7 +1009,7 @@ function SilentFlow({
       <div className="citizen-flow">
         {back}
         <p className="eyebrow">Silent · Optional</p>
-        <h1>Would you like to leave a safe contact detail?</h1>
+        <h1 tabIndex={-1}>Would you like to leave a safe contact detail?</h1>
         <p className="citizen-lead">
           You can skip this. Choose “Do not call” or “No contact details now” if
           contact would not be safe.
@@ -873,16 +1039,19 @@ function SilentFlow({
     <div className="citizen-flow">
       {back}
       <p className="eyebrow">Silent · Review</p>
-      <h1>Review your answers</h1>
+      <h1 tabIndex={-1}>Review your answers</h1>
       <div className="review-card">
         <p>
-          <strong>Current safety:</strong> {silent.current_safety}
+          <strong>Current safety:</strong>{" "}
+          {humanizeSilentValue(silent.current_safety)}
         </p>
         <p>
-          <strong>Urgent help:</strong> {silent.urgent_help}
+          <strong>Urgent help:</strong>{" "}
+          {humanizeSilentValue(silent.urgent_help)}
         </p>
         <p>
-          <strong>Contact preference:</strong> {silent.contact_preference}
+          <strong>Contact preference:</strong>{" "}
+          {humanizeSilentValue(silent.contact_preference)}
         </p>
         {silent.optional_contact_value ? (
           <p>
@@ -908,7 +1077,7 @@ function ReceiptView({ receipt }: { receipt: Receipt | null }) {
   if (!receipt)
     return (
       <div className="citizen-flow">
-        <h1>No receipt on this device</h1>
+        <h1 tabIndex={-1}>No receipt on this device</h1>
         <p>Start again if you still want to share something.</p>
         <LinkButton href="/help" size="lg">
           Start a new session
@@ -918,7 +1087,7 @@ function ReceiptView({ receipt }: { receipt: Receipt | null }) {
   return (
     <div className="citizen-flow citizen-flow--receipt">
       <p className="eyebrow">Received</p>
-      <h1>Your information was received</h1>
+      <h1 tabIndex={-1}>Your information was received</h1>
       <p className="citizen-lead">
         Keep this reference if you want to talk about this submission later. It
         does not reveal the contents of what you shared.

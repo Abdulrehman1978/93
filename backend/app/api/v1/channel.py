@@ -5,9 +5,10 @@ from __future__ import annotations
 import uuid
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Header, status
+from fastapi import APIRouter, Depends, Header, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.v1.privacy import apply_public_privacy_headers
 from app.channel.registry import all_channel_capabilities
 from app.channel.schemas import (
     ChannelCapabilityResponse,
@@ -51,7 +52,10 @@ async def capabilities() -> tuple[ChannelCapabilityResponse, ...]:
     response_model=ChannelSessionResponse,
     status_code=status.HTTP_201_CREATED,
 )
-async def create_session(request: ChannelSessionCreate, db: DbSession) -> ChannelSessionResponse:
+async def create_session(
+    request: ChannelSessionCreate, db: DbSession, http_response: Response
+) -> ChannelSessionResponse:
+    apply_public_privacy_headers(http_response)
     response = await channel_session_service.create(db, request)
     await db.commit()
     return response
@@ -59,15 +63,17 @@ async def create_session(request: ChannelSessionCreate, db: DbSession) -> Channe
 
 @router.get("/sessions/{session_id}", response_model=SessionStateResponse)
 async def get_session(
-    session_id: uuid.UUID, db: DbSession, token: SessionToken
+    session_id: uuid.UUID, db: DbSession, token: SessionToken, http_response: Response
 ) -> SessionStateResponse:
+    apply_public_privacy_headers(http_response)
     return await channel_session_service.state(db, session_id, token or "")
 
 
 @router.get("/sessions/{session_id}/policy", response_model=SessionPolicyResponse)
 async def get_policy(
-    session_id: uuid.UUID, db: DbSession, token: SessionToken
+    session_id: uuid.UUID, db: DbSession, token: SessionToken, http_response: Response
 ) -> SessionPolicyResponse:
+    apply_public_privacy_headers(http_response)
     interaction = await channel_session_service.authenticate(
         db, session_id, token or "", mutate=False
     )
@@ -82,7 +88,9 @@ async def record_consent(
     request: ConsentDecisionRequest,
     db: DbSession,
     token: SessionToken,
+    http_response: Response,
 ) -> ConsentReceipt:
+    apply_public_privacy_headers(http_response)
     receipt = await consent_engine.record(db, session_id, token or "", request)
     await db.commit()
     return receipt
@@ -94,7 +102,9 @@ async def continue_intake(
     request: IntakeAcknowledgementRequest,
     db: DbSession,
     token: SessionToken,
+    http_response: Response,
 ) -> SessionControlResponse:
+    apply_public_privacy_headers(http_response)
     response = await consent_engine.acknowledge_intake(db, session_id, token or "", request)
     await db.commit()
     return response
@@ -106,7 +116,9 @@ async def select_mode(
     request: ModeSelectionRequest,
     db: DbSession,
     token: SessionToken,
+    http_response: Response,
 ) -> SessionControlResponse:
+    apply_public_privacy_headers(http_response)
     response = await channel_session_service.select_mode(db, session_id, token or "", request)
     await db.commit()
     return response
@@ -114,8 +126,9 @@ async def select_mode(
 
 @router.post("/sessions/{session_id}/complete", response_model=SessionControlResponse)
 async def complete_session(
-    session_id: uuid.UUID, db: DbSession, token: SessionToken
+    session_id: uuid.UUID, db: DbSession, token: SessionToken, http_response: Response
 ) -> SessionControlResponse:
+    apply_public_privacy_headers(http_response)
     response = await channel_session_service.close(db, session_id, token or "", "COMPLETED")
     await db.commit()
     return response
@@ -123,8 +136,9 @@ async def complete_session(
 
 @router.post("/sessions/{session_id}/abandon", response_model=SessionControlResponse)
 async def abandon_session(
-    session_id: uuid.UUID, db: DbSession, token: SessionToken
+    session_id: uuid.UUID, db: DbSession, token: SessionToken, http_response: Response
 ) -> SessionControlResponse:
+    apply_public_privacy_headers(http_response)
     response = await channel_session_service.close(db, session_id, token or "", "ABANDONED")
     await db.commit()
     return response

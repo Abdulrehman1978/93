@@ -45,6 +45,27 @@ def _translation(locale: str | None) -> tuple[str, TranslationTruthStatus]:
     return "en", TranslationTruthStatus.FALLBACK_LANGUAGE
 
 
+async def has_active_intake_authorization(session: AsyncSession, interaction_id: uuid.UUID) -> bool:
+    authorization = await session.scalar(
+        select(ProcessingAuthorization.id)
+        .join(
+            ProcessingPurpose,
+            ProcessingPurpose.id == ProcessingAuthorization.processing_purpose_id,
+        )
+        .join(
+            ProcessingAuthorityType,
+            ProcessingAuthorityType.id == ProcessingAuthorization.authority_type_id,
+        )
+        .where(
+            ProcessingAuthorization.interaction_id == interaction_id,
+            ProcessingPurpose.purpose_code == "PURP-01",
+            ProcessingAuthorityType.authority_code == "VOLUNTARILY_PROVIDED_FOR_SPECIFIED_PURPOSE",
+            ProcessingAuthorization.status == "ACTIVE",
+        )
+    )
+    return authorization is not None
+
+
 class ConsentEngine:
     def __init__(self, sessions: ChannelSessionService) -> None:
         self.sessions = sessions
@@ -80,6 +101,7 @@ class ConsentEngine:
                     )
                 )
         current = await self._current_decisions(session, interaction.id)
+        intake_ready = await has_active_intake_authorization(session, interaction.id)
         await session.flush()
         mode = InteractionMode(interaction.interaction_mode)
         applicable = tuple(item for item in PURPOSE_POLICIES if mode in item.applicable_modes)
@@ -121,6 +143,7 @@ class ConsentEngine:
             current_decisions=current,
             capabilities=capabilities,
             conditional_consents=conditional,
+            intake_ready=intake_ready,
         )
 
     async def record(

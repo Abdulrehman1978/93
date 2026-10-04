@@ -188,7 +188,16 @@ class ChannelSessionService:
         valid_status = interaction.status == "OPEN" or (
             allow_completed and interaction.status == "COMPLETED"
         )
-        if not valid_status or (interaction.status == "OPEN" and self._expired(interaction, now)):
+        completed_retry_expired = interaction.status == "COMPLETED" and (
+            interaction.ended_at is None
+            or now
+            >= interaction.ended_at + timedelta(seconds=settings.SUBMISSION_RECEIPT_RETRY_SECONDS)
+        )
+        if (
+            not valid_status
+            or (interaction.status == "OPEN" and self._expired(interaction, now))
+            or completed_retry_expired
+        ):
             logger.warning(
                 "channel session authentication denied",
                 extra={
@@ -196,7 +205,7 @@ class ChannelSessionService:
                 },
             )
             raise _invalid_session()
-        if mutate:
+        if mutate and interaction.status == "OPEN":
             interaction.last_activity_at = now
         logger.info(
             "channel session authenticated",
@@ -222,6 +231,8 @@ class ChannelSessionService:
         self, session: AsyncSession, session_id: uuid.UUID, raw_token: str
     ) -> SessionStateResponse:
         interaction = await self.authenticate(session, session_id, raw_token, mutate=False)
+        from app.privacy.consent_engine import has_active_intake_authorization
+
         return SessionStateResponse(
             session_id=interaction.id,
             channel=ChannelType(interaction.channel),
@@ -231,6 +242,7 @@ class ChannelSessionService:
             expires_at=interaction.session_expires_at,
             last_activity_at=interaction.last_activity_at,
             policy_version=interaction.session_policy_version,
+            intake_ready=await has_active_intake_authorization(session, interaction.id),
         )
 
     async def select_mode(
@@ -308,6 +320,14 @@ class ChannelSessionService:
         case_id: uuid.UUID,
     ) -> Interaction:
         interaction = await self.authenticate(session, session_id, raw_token, mutate=True)
+        return await self.bind_authenticated_interaction(session, interaction, case_id)
+
+    async def bind_authenticated_interaction(
+        self,
+        session: AsyncSession,
+        interaction: Interaction,
+        case_id: uuid.UUID,
+    ) -> Interaction:
         case = await session.scalar(select(Case).where(Case.id == case_id).with_for_update())
         if case is None or case.subject_id != interaction.subject_id:
             raise AppException(

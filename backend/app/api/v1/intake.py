@@ -8,6 +8,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, Header, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.v1.privacy import apply_public_privacy_headers
 from app.database import get_db_session
 from app.intake.schemas import (
     IntakeSubmissionResponse,
@@ -22,12 +23,6 @@ SessionToken = Annotated[str | None, Header(alias="X-Channel-Session-Token")]
 intake_service = CitizenIntakeService()
 
 
-def _no_store(response: Response) -> None:
-    response.headers["Cache-Control"] = "no-store, max-age=0"
-    response.headers["Pragma"] = "no-cache"
-    response.headers["Referrer-Policy"] = "no-referrer"
-
-
 @router.post(
     "/sessions/{session_id}/write",
     response_model=IntakeSubmissionResponse,
@@ -40,7 +35,7 @@ async def submit_write(
     token: SessionToken,
     response: Response,
 ) -> IntakeSubmissionResponse:
-    _no_store(response)
+    apply_public_privacy_headers(response)
     result = await intake_service.submit_write(db, session_id, token or "", request)
     await db.commit()
     if not result.case_created:
@@ -60,7 +55,7 @@ async def submit_silent(
     token: SessionToken,
     response: Response,
 ) -> IntakeSubmissionResponse:
-    _no_store(response)
+    apply_public_privacy_headers(response)
     result = await intake_service.submit_silent(db, session_id, token or "", request)
     await db.commit()
     if not result.case_created:

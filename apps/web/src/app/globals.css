@@ -303,6 +303,12 @@ p {
   color: var(--foreground);
   font-weight: 700;
 }
+.citizen-language-lock {
+  max-width: 18rem;
+  color: var(--foreground-muted);
+  font-size: 0.75rem;
+  line-height: 1.3;
+}
 .citizen-flow {
   display: grid;
   gap: var(--space-5);

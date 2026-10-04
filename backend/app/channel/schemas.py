@@ -62,6 +62,7 @@ class SessionStateResponse(BaseModel):
     expires_at: datetime | None
     last_activity_at: datetime | None
     policy_version: str | None
+    intake_ready: bool
 
 
 class ChannelCapabilityResponse(BaseModel):
@@ -104,6 +105,7 @@ class SessionPolicyResponse(BaseModel):
     current_decisions: dict[str, ConsentChoice]
     capabilities: tuple[ChannelCapabilityResponse, ...]
     conditional_consents: tuple[ConsentRequirement, ...] = ()
+    intake_ready: bool = False
 
 
 class ConsentDecisionRequest(BaseModel):

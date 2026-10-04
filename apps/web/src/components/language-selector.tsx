@@ -29,10 +29,12 @@ export const foundationLanguages: LanguageOption[] = [
 export function LanguageSelector({
   languages = foundationLanguages,
   defaultCode = "en",
+  disabled = false,
   onChange,
 }: {
   languages?: LanguageOption[];
   defaultCode?: string;
+  disabled?: boolean;
   onChange?: (code: string) => void;
 }) {
   const [query, setQuery] = useState("");
@@ -40,6 +42,7 @@ export function LanguageSelector({
   const [activeIndex, setActiveIndex] = useState(0);
   const labelId = useId();
   const listId = useId();
+  useEffect(() => setSelected(defaultCode), [defaultCode]);
   const filtered = useMemo(() => {
     const normalized = query.trim().toLocaleLowerCase();
     return languages.filter((language) =>
@@ -62,6 +65,7 @@ export function LanguageSelector({
   }, [filtered]);
 
   const choose = (language: LanguageOption) => {
+    if (disabled) return;
     setSelected(language.code);
     onChange?.(language.code);
     setQuery("");
@@ -132,6 +136,7 @@ export function LanguageSelector({
           }
           aria-describedby={`${listId}-help`}
           placeholder="Search languages"
+          disabled={disabled}
         />
       </div>
       <p id={`${listId}-help`} className="language-selector__help">
@@ -154,6 +159,7 @@ export function LanguageSelector({
               aria-selected={selected === language.code}
               className={cn(index === safeActiveIndex && "is-active")}
               onClick={() => choose(language)}
+              disabled={disabled}
             >
               <span dir={language.direction}>{language.nativeName}</span>
               <small>{language.englishName}</small>
@@ -166,7 +172,9 @@ export function LanguageSelector({
         <p role="status">No language names match this search.</p>
       ) : null}
       <p className="language-selector__truth">
-        Control shell only · linguistic validation pending
+        {disabled
+          ? "Language is locked for this private session. Start a new session to change it."
+          : "Control shell only · linguistic validation pending"}
       </p>
     </div>
   );

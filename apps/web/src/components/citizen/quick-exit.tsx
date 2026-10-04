@@ -4,7 +4,20 @@ import { LogOut } from "lucide-react";
 import { useEffect } from "react";
 import { Button } from "@/components/ui";
 
-const QUICK_EXIT_URL = process.env.NEXT_PUBLIC_QUICK_EXIT_URL || "/";
+const configuredQuickExitUrl = process.env.NEXT_PUBLIC_QUICK_EXIT_URL;
+const deploymentEnvironment = process.env.NEXT_PUBLIC_APP_ENV;
+
+if (
+  (deploymentEnvironment === "production" ||
+    deploymentEnvironment === "staging") &&
+  !configuredQuickExitUrl
+) {
+  throw new Error(
+    "NEXT_PUBLIC_QUICK_EXIT_URL must be configured for production and staging deployments.",
+  );
+}
+
+const QUICK_EXIT_URL = configuredQuickExitUrl || "/";
 
 export function clearCitizenSession() {
   if (typeof window === "undefined") return;
