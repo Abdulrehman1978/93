@@ -1,8 +1,12 @@
+"use client";
+
 import type { ReactNode } from "react";
 import { Accessibility, CircleHelp } from "lucide-react";
 import { SkipLink } from "@/components/accessibility";
+import { LanguageSelector } from "@/components/language-selector";
 import { StatusBadge } from "@/components/status";
 import { cn } from "@/lib/cn";
+import { QuickExit } from "@/components/citizen/quick-exit";
 
 function PrototypeIdentity() {
   return (
@@ -26,9 +30,9 @@ function FoundationFooter() {
         <p>No official government emblem or endorsement is represented.</p>
       </div>
       <nav aria-label="Footer information">
-        <span>Privacy content pending</span>
+        <span>Privacy notice shown before intake</span>
         <span>Accessibility baseline available</span>
-        <span>Help content pending</span>
+        <span>Citizen intake available</span>
         <span>Service status foundation ready</span>
       </nav>
     </footer>
@@ -71,6 +75,19 @@ export function PublicShell({
 export function CitizenShell({ children }: { children: ReactNode }) {
   return (
     <PublicShell className="app-shell--citizen">
+      <div className="citizen-toolbar" aria-label="Citizen safety controls">
+        <LanguageSelector
+          languages={[
+            { code: "en", nativeName: "English", englishName: "English" },
+            { code: "hi", nativeName: "हिन्दी", englishName: "Hindi" },
+            { code: "mr", nativeName: "मराठी", englishName: "Marathi" },
+          ]}
+          onChange={(code) => {
+            window.sessionStorage.setItem("sambal:intake:language", code);
+          }}
+        />
+        <QuickExit />
+      </div>
       <div className="citizen-content">{children}</div>
     </PublicShell>
   );

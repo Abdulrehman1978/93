@@ -164,7 +164,7 @@ async def test_fresh_schema_is_within_budget_and_privacy_guardrails(
             "WHERE table_schema = 'public' AND table_type = 'BASE TABLE' AND table_name <> 'alembic_version'"
         )
     )
-    assert table_count == 41
+    assert table_count == 42
     assert table_count <= 45
 
     forbidden_columns = await db_connection.scalars(
@@ -200,6 +200,29 @@ async def test_fresh_schema_is_within_budget_and_privacy_guardrails(
     )
     assert await db_connection.scalar(
         text("SELECT to_regclass('public.consent_events') IS NOT NULL")
+    )
+    intake_columns = set(
+        await db_connection.scalars(
+            text(
+                "SELECT column_name FROM information_schema.columns "
+                "WHERE table_schema = 'public' AND table_name = 'citizen_intake_entries'"
+            )
+        )
+    )
+    assert {
+        "interaction_id",
+        "sequence",
+        "entry_type",
+        "question_code",
+        "content",
+        "language",
+        "client_submission_id",
+    }.issubset(intake_columns)
+    assert await db_connection.scalar(
+        text(
+            "SELECT EXISTS (SELECT 1 FROM pg_trigger "
+            "WHERE tgname = 'citizen_intake_entries_append_only')"
+        )
     )
 
 

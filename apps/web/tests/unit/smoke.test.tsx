@@ -10,27 +10,24 @@ describe("HomePage Smoke Test", () => {
     expect(heading).toBeDefined();
     expect(heading).not.toBeNull();
     expect(heading.textContent).toContain(
-      "A clear, humane grammar for future public-service workflows",
+      "You can share what is happening in the way that feels safest",
     );
   });
 
-  it("renders capability states with truthful badges", () => {
+  it("renders truthful citizen intake affordances", () => {
     render(React.createElement(HomePage));
-    expect(screen.getByText("Design system")).toBeDefined();
-    expect(screen.getByText("Accessibility automated baseline")).toBeDefined();
-    expect(screen.getByText("Citizen intake")).toBeDefined();
-    expect(screen.getByText("AI assessment")).toBeDefined();
+    expect(screen.getByRole("link", { name: /get help/i })).toBeDefined();
+    expect(screen.getByText("Private by design")).toBeDefined();
+    expect(screen.getByText("Human-readable choices")).toBeDefined();
   });
 
-  it("renders engineering notes and capability status indicators", () => {
+  it("renders the prototype boundary", () => {
     render(React.createElement(HomePage));
     expect(
-      screen.getByText(/Civic Calm tokens and reusable primitives are ready/i),
+      screen.getByText(/No microphone is used by the Speak page/i),
     ).toBeDefined();
     expect(
-      screen.getByText(
-        /No live scoring, diagnosis, or model inference exists/i,
-      ),
+      screen.getByText(/Quick Exit is available throughout the intake flow/i),
     ).toBeDefined();
   });
 });

@@ -73,6 +73,16 @@
 | Purpose-limited consent | Notice-before-decision, stale policy, append-only revocation, action idempotency | `backend/app/privacy/consent_engine.py`, `docs/privacy/CONSENT_ENGINE.md` | Implemented |
 | Pre-case interaction | Subject-bound interaction with nullable case and validated internal binding | migration `0009_channel_gateway_consent`, schema invariants | Implemented |
 
+## Packet 07 traceability addendum
+
+| Requirement | Implemented boundary | Evidence | Status |
+| --- | --- | --- | --- |
+| Citizen chooses Speak / Write / Silent | `/help`, `/help/speak`, `/help/write`, `/help/silent` with truthful mode registry | `apps/web/src/components/citizen/intake-flow.tsx`; Packet 07 Playwright | Implemented; Speak pre-capture only |
+| Trauma-informed intake | Optional fields, no forced legal fields, one-question Silent flow, review/edit, recovery copy | `docs/product/CITIZEN_INTAKE.md`; `apps/web/src/app/globals.css` | Implemented |
+| Quick Exit | Button + Escape, session/draft purge, neutral `location.replace`, no-referrer response headers | `docs/product/QUICK_EXIT.md`; `quick-exit.tsx` | Implemented |
+| Atomic encrypted citizen submission | Encrypted append-only entry table, OPEN NORMAL case, case binding, authorization promotion, receipt idempotency | `backend/app/intake/service.py`; migration `0012`; Packet 07 integration tests | Implemented; PostgreSQL CI gate |
+| No premature voice/AI capability | No microphone/Web Speech/getUserMedia/audio upload/NLP/AI path in Packet 07 | `docs/results/07-result.md`; Speak route test | Implemented truth boundary |
+
 ---
 
 ## 2. SIH26093 Problem Statement Itemized Coverage Gate (35 Mandatory Terms)

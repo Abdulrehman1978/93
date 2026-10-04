@@ -526,3 +526,65 @@ export const SessionPolicyResponseSchema = z.object({
   conditional_consents: z.array(ConsentRequirementSchema).default([]),
 });
 export type SessionPolicyResponse = z.infer<typeof SessionPolicyResponseSchema>;
+
+export const CurrentSafetyChoiceSchema = z.enum([
+  "YES",
+  "NO_SOMEONE_MAY_BE_NEARBY",
+  "NOT_SURE",
+  "SKIP",
+]);
+export type CurrentSafetyChoice = z.infer<typeof CurrentSafetyChoiceSchema>;
+
+export const UrgentHelpChoiceSchema = z.enum([
+  "YES_AS_SOON_AS_POSSIBLE",
+  "NO",
+  "NOT_SURE",
+  "SKIP",
+]);
+export type UrgentHelpChoice = z.infer<typeof UrgentHelpChoiceSchema>;
+
+export const ContactPreferenceSchema = z.enum([
+  "DO_NOT_CALL",
+  "SILENT_SMS_PREFERRED",
+  "WHATSAPP_PREFERRED",
+  "ASK_ME_LATER",
+  "NO_CONTACT_DETAILS_NOW",
+]);
+export type ContactPreference = z.infer<typeof ContactPreferenceSchema>;
+
+export const ClientSubmissionIdSchema = z
+  .string()
+  .regex(/^[A-Za-z0-9._:-]{1,80}$/)
+  .min(1)
+  .max(80);
+
+export const WriteIntakeRequestSchema = z.object({
+  client_submission_id: ClientSubmissionIdSchema,
+  narrative: z.string().min(1).max(16_000),
+  optional_when: z.string().max(160).nullable().optional(),
+  optional_location: z.string().max(300).nullable().optional(),
+  optional_current_safety: CurrentSafetyChoiceSchema.nullable().optional(),
+  optional_contact_preference: ContactPreferenceSchema.nullable().optional(),
+  optional_contact_value: z.string().min(1).max(320).nullable().optional(),
+});
+export type WriteIntakeRequest = z.infer<typeof WriteIntakeRequestSchema>;
+
+export const SilentIntakeRequestSchema = z.object({
+  client_submission_id: ClientSubmissionIdSchema,
+  current_safety: CurrentSafetyChoiceSchema,
+  urgent_help: UrgentHelpChoiceSchema,
+  contact_preference: ContactPreferenceSchema,
+  optional_contact_value: z.string().min(1).max(320).nullable().optional(),
+});
+export type SilentIntakeRequest = z.infer<typeof SilentIntakeRequestSchema>;
+
+export const IntakeSubmissionResponseSchema = z.object({
+  tracking_reference: z.string().min(1).max(32),
+  received_at: z.string().datetime(),
+  interaction_mode: InteractionModeSchema,
+  entry_count: z.number().int().positive(),
+  case_created: z.boolean().default(true),
+});
+export type IntakeSubmissionResponse = z.infer<
+  typeof IntakeSubmissionResponseSchema
+>;

@@ -140,6 +140,27 @@ class ChannelSessionService:
     async def authenticate(
         self, session: AsyncSession, session_id: uuid.UUID, raw_token: str, *, mutate: bool
     ) -> Interaction:
+        return await self._authenticate(
+            session, session_id, raw_token, mutate=mutate, allow_completed=False
+        )
+
+    async def authenticate_submission(
+        self, session: AsyncSession, session_id: uuid.UUID, raw_token: str
+    ) -> Interaction:
+        """Authenticate a first submit or an idempotent retry of a completed submit."""
+        return await self._authenticate(
+            session, session_id, raw_token, mutate=True, allow_completed=True
+        )
+
+    async def _authenticate(
+        self,
+        session: AsyncSession,
+        session_id: uuid.UUID,
+        raw_token: str,
+        *,
+        mutate: bool,
+        allow_completed: bool,
+    ) -> Interaction:
         if not raw_token or len(raw_token) > 512:
             logger.warning(
                 "channel session authentication denied",
@@ -164,7 +185,10 @@ class ChannelSessionService:
             )
             raise _invalid_session()
         now = datetime.now(UTC)
-        if interaction.status != "OPEN" or self._expired(interaction, now):
+        valid_status = interaction.status == "OPEN" or (
+            allow_completed and interaction.status == "COMPLETED"
+        )
+        if not valid_status or (interaction.status == "OPEN" and self._expired(interaction, now)):
             logger.warning(
                 "channel session authentication denied",
                 extra={

@@ -5,6 +5,7 @@ export const metadata: Metadata = {
   title: "SAMBAL — Civic service prototype",
   description:
     "SIH prototype design and engineering foundation for SAMBAL/NHAA integration.",
+  referrer: "no-referrer",
 };
 
 export default function RootLayout({

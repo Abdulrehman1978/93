@@ -31,3 +31,10 @@ Status: Packet 04 baseline implemented; deployment-specific key custody, IdP con
 ## Explicitly absent in Packet 03
 
 The schema intentionally has no raw audio path, voiceprint, credibility score, lie score, inferred caste field, research corpus, vector embedding, facial analysis, or generic narrative JSON field. Packet 04 implements the application authorization and encryption baseline; RLS is explicitly deferred under `docs/security/RLS_DECISION.md`.
+## Packet 07 additions
+
+| Data element | Classification | Storage rule | Access / retention boundary |
+| --- | --- | --- | --- |
+| `citizen_intake_entries.content` | Highly sensitive citizen-provided narrative or answer | AES-256-GCM envelope through existing `EncryptedText`; no generic JSON or log copy | Interaction/case retention; authorized field-decryption scope only |
+| `citizen_intake_entries.client_submission_id` | Security metadata / opaque client retry key | Stored as a bounded opaque value; never a content or identity field | Used only for same-session idempotency |
+| `subject_contacts.contact_value` from citizen intake | Highly sensitive contact detail | Existing encrypted `subject_contacts.contact_value`; `safe_to_use = false` on intake | No contact delivery or dispatch in Packet 07 |

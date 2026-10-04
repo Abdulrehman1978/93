@@ -3,7 +3,7 @@
 > **Product Concept:** SAMBAL Multilingual Trauma-Aware Intelligence & Response Layer for NHAA (14566)  
 > **Sponsoring Body:** Ministry of Social Justice and Empowerment (MoSJE), Department of Social Justice and Empowerment (DoSJE)  
 > **Master Build Specification:** V2  
-> **Last Updated:** 2026-10-03  
+> **Last Updated:** 2026-10-04
 > **Tracking Model:** Strict approval-gated packet execution with zero unverified status transitions.
 
 ---
@@ -25,7 +25,7 @@
 | **PKT-06** | Channel Gateway & Consent Engine | **OWNER APPROVED — PASS via 06R2** | Phase 2 — Ingestion & Safety | Real-Time Systems / API Architect | [`docs/results/06-result.md`](./results/06-result.md) |
 | **PKT-06R** | **Canonical Consent Authority, Session Security & Policy-Integrity Remediation** | **OWNER APPROVED — PASS via 06R2** | Phase 2 — Ingestion & Safety | Real-Time Systems / API Architect + Security Architect | [`docs/results/06R-result.md`](./results/06R-result.md) |
 | **PKT-06R2** | **Case-Binding Integrity, Conditional Consent Semantics & Database Trust-Boundary Remediation** | **OWNER APPROVED — PASS** | Phase 2 — Ingestion & Safety | Real-Time Systems / API Architect + Security Architect | [`docs/results/06R2-result.md`](./results/06R2-result.md) |
-| **PKT-07** | Citizen Intake (Speak / Write / Silent) | NOT_STARTED | Phase 2 — Ingestion & Safety | Staff Frontend / Trauma UX Specialist | `docs/results/07-result.md` |
+| **PKT-07** | Citizen Intake (Speak / Write / Silent) | **OWNER_REVIEW** | Phase 2 — Ingestion & Safety | Staff Frontend / Trauma UX Specialist | [`docs/results/07-result.md`](./results/07-result.md) |
 | **PKT-08** | Multilingual Speech Pipeline & ASR | NOT_STARTED | Phase 2 — Ingestion & Safety | Speech AI Engineer / Applied ML | `docs/results/08-result.md` |
 | **PKT-09** | Text Safety, Negation & Context Engine | NOT_STARTED | Phase 2 — Ingestion & Safety | Multilingual NLP Engineer | `docs/results/09-result.md` |
 | **PKT-10** | Acoustic & Affective Signal Engine | NOT_STARTED | Phase 2 — Ingestion & Safety | Speech Analytics Lead / Audio ML | `docs/results/10-result.md` |
@@ -58,6 +58,7 @@
 ### Packet Status Allowed Values
 - `NOT_STARTED`: Scoped, but no work began.
 - `IN_PROGRESS`: Actively under execution.
+- `OWNER_REVIEW`: Implementation and verification are complete; owner approval is pending.
 - `PASS`: Complete with verifiable code, passing automated tests, clear evidence, and zero blocking issues.
 - `PASS_WITH_EXTERNAL_DEPENDENCY`: Completed with validated sandbox/adapter abstraction where official 3rd party live credentials/APIs are legitimately restricted.
 - `PARTIAL`: Incomplete scope, unclosed edge cases.

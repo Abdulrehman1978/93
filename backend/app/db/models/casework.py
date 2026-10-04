@@ -269,6 +269,55 @@ class Interaction(Base):
     )
 
 
+class CitizenIntakeEntry(Base):
+    """Encrypted, append-only citizen statements and structured answers."""
+
+    __tablename__ = "citizen_intake_entries"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        _uuid(), primary_key=True, server_default=text("gen_random_uuid()")
+    )
+    interaction_id: Mapped[uuid.UUID] = mapped_column(
+        _uuid(), ForeignKey("interactions.id", ondelete="RESTRICT"), nullable=False
+    )
+    sequence: Mapped[int] = mapped_column(Integer, nullable=False)
+    entry_type: Mapped[str] = mapped_column(String(20), nullable=False)
+    question_code: Mapped[str] = mapped_column(String(60), nullable=False)
+    content: Mapped[str] = mapped_column(
+        EncryptedText("citizen_intake_entries.content"), nullable=False
+    )
+    language: Mapped[str] = mapped_column(String(20), nullable=False)
+    client_submission_id: Mapped[str] = mapped_column(String(80), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), nullable=False
+    )
+
+    __table_args__ = (
+        CheckConstraint("sequence > 0", name="citizen_intake_entries_sequence_positive"),
+        CheckConstraint(
+            "entry_type IN ('NARRATIVE','STRUCTURED_ANSWER')",
+            name="citizen_intake_entries_entry_type",
+        ),
+        Index(
+            "ix_citizen_intake_entries_interaction_sequence",
+            "interaction_id",
+            "sequence",
+        ),
+        Index(
+            "ix_citizen_intake_entries_interaction_created",
+            "interaction_id",
+            "created_at",
+        ),
+        Index(
+            "uq_citizen_intake_entries_submission_sequence",
+            "interaction_id",
+            "client_submission_id",
+            "sequence",
+            unique=True,
+        ),
+    )
+
+
 class InteractionEvent(Base):
     __tablename__ = "interaction_events"
 

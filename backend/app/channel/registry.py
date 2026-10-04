@@ -46,11 +46,16 @@ _CAPABILITIES: dict[ChannelType, ChannelCapability] = {
     ChannelType.WEB: ChannelCapability(
         ChannelType.WEB,
         CapabilityStatus.LIVE_TESTED,
-        (InteractionMode.UNSELECTED, InteractionMode.TEXT),
+        (
+            InteractionMode.UNSELECTED,
+            InteractionMode.VOICE,
+            InteractionMode.TEXT,
+            InteractionMode.SILENT,
+        ),
         None,
         True,
         False,
-        "Canonical public session entrypoint; no external provider is called.",
+        "Canonical public session entrypoint; voice is a truthful pre-capture flow and no external provider is called.",
     ),
     ChannelType.PORTAL: ChannelCapability(
         ChannelType.PORTAL,

@@ -3,7 +3,7 @@
 
 > **Document ID:** CLAIMS-REGISTER-V2  
 > **Standard:** Mandatory empirical verification for all product, performance, security, and algorithmic claims. Zero unsupported claims.  
-> **Evaluation Date:** 2026-10-03 (Updated for Packet 02R Remediation)  
+> **Evaluation Date:** 2026-10-04 (Updated for Packet 07 implementation)
 > **Truth Status Vocabulary:**
 > - `DESIGN_POLICY` (Architectural or design standard enforced by policy; pending downstream implementation)
 > - `READINESS_TARGET` (Preparation for phased statutory or regulatory frameworks)
@@ -51,3 +51,11 @@
 | `CLM-19` | Anonymous session credentials are stored as digests with bounded idle and absolute lifetime. | `IMPLEMENTED` | `backend/app/channel/session.py`; migration 0009 | This does not replace deployment-layer TLS, WAF, rate limiting, or secret rotation. |
 | `CLM-20` | Consent decisions are purpose-specific, append-only, revocable, stale-policy protected, and idempotent. | `IMPLEMENTED` | `backend/app/privacy/consent_engine.py`; Packet 06 tests | Later packets still own provider-specific handoff and retention execution. |
 | `CLM-21` | Packet 06 is DPDP-ready architecture baseline, not DPDP certification or legal advice. | `READINESS_TARGET` | `docs/privacy/PROCESSING_PURPOSE_REGISTER.md`; official MeitY sources | Deployment legal review and phased operational obligations remain required. |
+
+## Packet 07 implementation claims
+
+| Claim ID | Product Claim Statement | Truth Status | Evidence | Limitation |
+| --- | --- | --- | --- | --- |
+| `CLM-22` | Citizen Write and Silent intake creates an encrypted, append-only entry trail and one atomic OPEN NORMAL case after server-derived PURP-01 authorization. | `IMPLEMENTED` | `backend/app/intake/service.py`; migration `0012_citizen_intake`; Packet 07 tests | PostgreSQL replay/integration evidence is required in CI; no downstream response SLA is claimed. |
+| `CLM-23` | Packet 07 Speak does not capture audio, call a microphone API, invoke ASR, or upload audio. | `IMPLEMENTED` | `apps/web/src/components/citizen/intake-flow.tsx`; Packet 07 Playwright test | Speech processing is explicitly deferred to Packet 08. |
+| `CLM-24` | Quick Exit clears local citizen session state and drafts before neutral replacement navigation. | `IMPLEMENTED` | `apps/web/src/components/citizen/quick-exit.tsx`; `docs/product/QUICK_EXIT.md` | It cannot remove external network/device records or hostile-device monitoring. |

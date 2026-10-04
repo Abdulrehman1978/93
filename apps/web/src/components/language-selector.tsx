@@ -29,9 +29,11 @@ export const foundationLanguages: LanguageOption[] = [
 export function LanguageSelector({
   languages = foundationLanguages,
   defaultCode = "en",
+  onChange,
 }: {
   languages?: LanguageOption[];
   defaultCode?: string;
+  onChange?: (code: string) => void;
 }) {
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState(defaultCode);
@@ -61,6 +63,7 @@ export function LanguageSelector({
 
   const choose = (language: LanguageOption) => {
     setSelected(language.code);
+    onChange?.(language.code);
     setQuery("");
     setActiveIndex(0);
   };

@@ -17,6 +17,7 @@ erDiagram
     CASES ||--o{ CASE_STATUS_EVENTS : records
     CASES ||--o{ INTERACTIONS : contains
     INTERACTIONS ||--o{ INTERACTION_EVENTS : records
+    INTERACTIONS ||--o{ CITIZEN_INTAKE_ENTRIES : receives
     INTERACTIONS ||--o{ TRANSCRIPT_SEGMENTS : yields
     TRANSCRIPT_SEGMENTS ||--o{ TRANSLATIONS : represents
 ```
@@ -124,5 +125,24 @@ erDiagram
     INTERACTIONS ||--o{ PROCESSING_AUTHORIZATIONS : authorizes
     CONSENT_EVENTS ||--o{ PROCESSING_AUTHORIZATIONS : proves
 ```
+
+## Packet 07 citizen intake boundary
+
+```mermaid
+erDiagram
+    INTERACTIONS ||--o{ CITIZEN_INTAKE_ENTRIES : receives
+    SUBJECTS ||--o{ SUBJECT_CONTACTS : may_have
+    CASES ||--o{ CASE_STATUS_EVENTS : records
+    CITIZEN_INTAKE_ENTRIES {
+        uuid interaction_id FK
+        int sequence
+        string entry_type
+        string question_code
+        encrypted_text content
+        string client_submission_id
+    }
+```
+
+Write and Silent submission creates one OPEN NORMAL case atomically with ordered encrypted entries, binds the pre-case interaction, promotes active PURP-01 authorization, and completes the interaction. Speak is represented only as a truthful pre-capture mode; no audio table or provider payload is introduced.
 
 An interaction may exist without a case, but it can never exist without a subject. Case binding is a later, validated association and does not rewrite interaction or consent history.

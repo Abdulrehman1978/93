@@ -4,3 +4,4 @@ export * from "./layout";
 export * from "./status";
 export * from "./ui";
 export * from "./error-recovery-demo";
+export * from "./citizen/quick-exit";

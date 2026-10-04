@@ -39,7 +39,12 @@ def test_channel_registry_reports_only_web_as_live_public_entrypoint() -> None:
     web = get_channel_capability(ChannelType.WEB)
     assert web.status is CapabilityStatus.LIVE_TESTED
     assert web.public_entrypoint is True
-    assert web.supported_modes == (InteractionMode.UNSELECTED, InteractionMode.TEXT)
+    assert web.supported_modes == (
+        InteractionMode.UNSELECTED,
+        InteractionMode.VOICE,
+        InteractionMode.TEXT,
+        InteractionMode.SILENT,
+    )
 
     telephony = get_channel_capability(ChannelType.TELEPHONY)
     assert telephony.public_entrypoint is False

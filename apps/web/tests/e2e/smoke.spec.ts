@@ -16,7 +16,7 @@ test.describe("SAMBAL Web Shell Smoke Tests", () => {
     // Verify main heading content
     const h1 = page.locator("h1");
     await expect(h1).toContainText(
-      "A clear, humane grammar for future public-service workflows",
+      "You can share what is happening in the way that feels safest",
     );
 
     // Verify header branding
@@ -25,7 +25,7 @@ test.describe("SAMBAL Web Shell Smoke Tests", () => {
     );
 
     // Verify health button exists and is clickable
-    const healthBtn = page.locator("#view-health-btn");
+    const healthBtn = page.locator("#start-help-btn");
     await expect(healthBtn).toBeVisible();
   });
 
