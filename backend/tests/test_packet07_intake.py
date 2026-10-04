@@ -32,10 +32,26 @@ from app.intake.schemas import (
 )
 from app.intake.service import CitizenIntakeService
 from app.privacy.consent_engine import ConsentEngine
-from app.security.encryption import authorized_field_decryption
+from app.security.encryption import (
+    FieldEncryptor,
+    authorized_field_decryption,
+    use_field_encryptor,
+)
 from tests.test_packet06_channel import _acknowledge
 
 pytestmark = pytest.mark.integration
+
+
+class StaticKeyProvider:
+    def current_key_id(self) -> str:
+        return "PACKET07-TEST"
+
+    def get_key(self, key_id: str) -> bytes:
+        assert key_id == "PACKET07-TEST"
+        return b"7" * 32
+
+    def metadata(self) -> dict[str, str | bool]:
+        return {"provider": "packet07-test", "external_secret_required": True}
 
 
 @pytest.fixture
@@ -47,7 +63,9 @@ async def packet07_context() -> AsyncIterator[
         session = AsyncSession(bind=connection, expire_on_commit=False)
         try:
             gateway = ChannelSessionService()
-            yield session, gateway, ConsentEngine(gateway), CitizenIntakeService(gateway)
+            encryptor = FieldEncryptor(StaticKeyProvider())
+            with use_field_encryptor(encryptor):
+                yield session, gateway, ConsentEngine(gateway), CitizenIntakeService(gateway)
         finally:
             await session.close()
             await transaction.rollback()
