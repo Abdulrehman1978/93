@@ -24,6 +24,10 @@ The schema moves from 41 to 42 tables. `citizen_intake_entries.content` uses the
 
 ## Verification recorded locally
 
+Implementation closure commit: `c8e60447aa54bfb8426018e9481d7bcdd182b1fd`
+
+Implementation CI: [37173865230 — SUCCESS](https://github.com/Abdulrehman1978/93/actions/runs/37173865230)
+
 | Gate | Result |
 | --- | --- |
 | Backend Ruff | PASS |
